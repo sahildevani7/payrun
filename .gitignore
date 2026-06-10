@@ -12,6 +12,7 @@ dist/
 *.db
 *.sqlite3
 .venv/
+.venv-test/
 venv/
 
 # OS
