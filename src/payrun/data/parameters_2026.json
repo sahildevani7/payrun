@@ -1,0 +1,17 @@
+{
+    "plan_year": 2026,
+    "currency": "USD",
+    "pension": {
+        "rate": "0.0525",
+        "exemption_annual": "3400.00",
+        "ceiling_annual": "71000.00"
+    },
+    "insurance": {
+        "rate": "0.0175",
+        "annual_maximum": "950.00"
+    },
+    "employer": {
+        "pension_multiplier": "1.0",
+        "insurance_multiplier": "1.4"
+    }
+}
