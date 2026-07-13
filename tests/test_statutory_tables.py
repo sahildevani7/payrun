@@ -25,6 +25,14 @@ def test_loads_employer_parameters_for_known_plan_year():
     assert params.employer.insurance_multiplier.value == Decimal("1.4")
 
 
+def test_loads_tax_parameters_for_known_plan_year():
+    params = load_parameters(2026)
+    assert params.tax.basic_credit_annual.amount == Decimal("1000.00")
+    assert len(params.tax.brackets) == 4
+    assert params.tax.brackets[0].threshold.amount == Decimal("0.00")
+    assert params.tax.brackets[0].rate.value == Decimal("0.10")
+
+
 def test_currency_is_shared_across_all_money_fields():
     params = load_parameters(2026)
     assert params.pension.exemption_annual.currency == params.currency

@@ -13,5 +13,14 @@
     "employer": {
         "pension_multiplier": "1.0",
         "insurance_multiplier": "1.4"
+    },
+    "tax": {
+        "basic_credit_annual": "1000.00",
+        "brackets": [
+            {"threshold": "0.00", "rate": "0.10"},
+            {"threshold": "11000.00", "rate": "0.12"},
+            {"threshold": "44000.00", "rate": "0.22"},
+            {"threshold": "95000.00", "rate": "0.24"}
+        ]
     }
 }

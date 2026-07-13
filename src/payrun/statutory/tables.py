@@ -21,6 +21,7 @@ from typing import Any
 from payrun.errors import ParameterNotFoundError
 from payrun.money import Money
 from payrun.rate import Rate
+from payrun.tax.brackets import TaxBracket
 
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
@@ -45,12 +46,19 @@ class EmployerParameters:
 
 
 @dataclass(frozen=True, slots=True)
+class TaxParameters:
+    basic_credit_annual: Money
+    brackets: tuple[TaxBracket, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class StatutoryParameters:
     plan_year: int
     currency: str
     pension: PensionParameters
     insurance: InsuranceParameters
     employer: EmployerParameters
+    tax: TaxParameters
 
 
 def _parse(plan_year: int, raw: dict[str, Any]) -> StatutoryParameters:
@@ -58,6 +66,14 @@ def _parse(plan_year: int, raw: dict[str, Any]) -> StatutoryParameters:
     pension_raw = raw["pension"]
     insurance_raw = raw["insurance"]
     employer_raw = raw["employer"]
+    tax_raw = raw["tax"]
+    brackets = tuple(
+        TaxBracket(
+            threshold=Money(Decimal(bracket["threshold"]), currency),
+            rate=Rate(Decimal(bracket["rate"])),
+        )
+        for bracket in tax_raw["brackets"]
+    )
     return StatutoryParameters(
         plan_year=plan_year,
         currency=currency,
@@ -73,6 +89,10 @@ def _parse(plan_year: int, raw: dict[str, Any]) -> StatutoryParameters:
         employer=EmployerParameters(
             pension_multiplier=Rate(Decimal(employer_raw["pension_multiplier"])),
             insurance_multiplier=Rate(Decimal(employer_raw["insurance_multiplier"])),
+        ),
+        tax=TaxParameters(
+            basic_credit_annual=Money(Decimal(tax_raw["basic_credit_annual"]), currency),
+            brackets=brackets,
         ),
     )
 
