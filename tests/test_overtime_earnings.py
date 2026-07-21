@@ -38,6 +38,10 @@ def test_overtime_pays_multiplier_on_hours_above_threshold():
     assert line.amount == Money(Decimal("150.00"), "USD")
 
 
+def test_default_calculator_exposes_its_weekly_threshold():
+    assert default_calculator().weekly_threshold == Hours(Decimal("40"))
+
+
 def test_exactly_at_threshold_has_no_overtime():
     line = default_calculator().calculate(_hourly_employee("20.00"), Hours(Decimal("40")))
     assert line.amount == Money.zero("USD")

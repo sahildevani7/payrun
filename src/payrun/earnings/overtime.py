@@ -24,6 +24,10 @@ class OvertimeEarningCalculator:
         self._weekly_threshold = weekly_threshold
         self._multiplier = multiplier
 
+    @property
+    def weekly_threshold(self) -> Hours:
+        return self._weekly_threshold
+
     def calculate(self, employee: Employee, hours: Hours) -> EarningLine:
         if not isinstance(employee.compensation, HourlyCompensation):
             raise ValidationError("overtime earnings require hourly compensation")
