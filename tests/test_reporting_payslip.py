@@ -1,0 +1,57 @@
+import datetime as dt
+from decimal import Decimal
+
+from payrun.calendarx.period import PayPeriod
+from payrun.deductions.code import DeductionCode
+from payrun.deductions.line import DeductionLine
+from payrun.earnings.code import EarningCode
+from payrun.earnings.line import EarningLine
+from payrun.ids import EmployeeId
+from payrun.money import Money
+from payrun.reporting.payslip import payslip_lines
+from payrun.run.result import PaySlip
+
+
+def _payslip() -> PaySlip:
+    return PaySlip(
+        employee_id=EmployeeId("E0007"),
+        period=PayPeriod(
+            start=dt.date(2026, 3, 1),
+            end=dt.date(2026, 3, 15),
+            pay_date=dt.date(2026, 3, 20),
+            sequence=1,
+        ),
+        earnings=(EarningLine(EarningCode("REGULAR"), Money(Decimal("2000.00"), "USD")),),
+        deductions=(DeductionLine(DeductionCode("TAX"), Money(Decimal("200.00"), "USD")),),
+        employer_contributions=(),
+        gross=Money(Decimal("2000.00"), "USD"),
+        net=Money(Decimal("1800.00"), "USD"),
+    )
+
+
+def test_includes_employee_and_period():
+    lines = payslip_lines(_payslip())
+    assert "Employee: E0007" in lines
+    assert "Period: 2026-03-01..2026-03-15" in lines
+
+
+def test_includes_each_earning_line():
+    lines = payslip_lines(_payslip())
+    assert "  REGULAR: 2000.00 USD" in lines
+
+
+def test_includes_each_deduction_line():
+    lines = payslip_lines(_payslip())
+    assert "  TAX: 200.00 USD" in lines
+
+
+def test_includes_gross_and_net():
+    lines = payslip_lines(_payslip())
+    assert "Gross: 2000.00 USD" in lines
+    assert "Net: 1800.00 USD" in lines
+
+
+def test_section_headers_present():
+    lines = payslip_lines(_payslip())
+    assert "Earnings:" in lines
+    assert "Deductions:" in lines
