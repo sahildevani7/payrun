@@ -7,7 +7,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 from payrun.errors import MigrationError
-from payrun.storage.migrations import m0001_create_employees
+from payrun.storage.migrations import m0001_create_employees, m0002_create_run_tables
 from payrun.storage.schema import ensure_migrations_table
 
 
@@ -19,6 +19,7 @@ class Migration:
 
 MIGRATIONS: tuple[Migration, ...] = (
     Migration(m0001_create_employees.NAME, m0001_create_employees.up),
+    Migration(m0002_create_run_tables.NAME, m0002_create_run_tables.up),
 )
 
 
