@@ -78,3 +78,44 @@ def test_store_tracks_employees_independently():
         tax=Money.zero("USD"),
     )
     assert store.get(EmployeeId("E0002")) == YtdAccumulator.zero("USD")
+
+
+def test_set_overwrites_the_accumulator_for_an_employee():
+    store = YtdStore("USD")
+    accumulator = YtdAccumulator.zero("USD").plus(
+        gross=Money(Decimal("500.00"), "USD"),
+        pension=Money.zero("USD"),
+        insurance=Money.zero("USD"),
+        tax=Money.zero("USD"),
+    )
+    store.set(EmployeeId("E0001"), accumulator)
+    assert store.get(EmployeeId("E0001")) == accumulator
+
+
+def test_set_rejects_currency_mismatch():
+    store = YtdStore("USD")
+    with pytest.raises(CurrencyMismatchError):
+        store.set(EmployeeId("E0001"), YtdAccumulator.zero("CAD"))
+
+
+def test_items_returns_entries_sorted_by_employee_id():
+    store = YtdStore("USD")
+    store.record(
+        EmployeeId("E0002"),
+        gross=Money(Decimal("100.00"), "USD"),
+        pension=Money.zero("USD"),
+        insurance=Money.zero("USD"),
+        tax=Money.zero("USD"),
+    )
+    store.record(
+        EmployeeId("E0001"),
+        gross=Money(Decimal("200.00"), "USD"),
+        pension=Money.zero("USD"),
+        insurance=Money.zero("USD"),
+        tax=Money.zero("USD"),
+    )
+    assert [str(employee_id) for employee_id, _ in store.items()] == ["E0001", "E0002"]
+
+
+def test_items_is_empty_for_a_fresh_store():
+    assert YtdStore("USD").items() == []

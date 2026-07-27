@@ -47,6 +47,14 @@ class YtdStore:
     def get(self, employee_id: EmployeeId) -> YtdAccumulator:
         return self._data.get(employee_id, YtdAccumulator.zero(self._currency))
 
+    def set(self, employee_id: EmployeeId, accumulator: YtdAccumulator) -> None:
+        if accumulator.gross.currency != self._currency:
+            raise CurrencyMismatchError(self._currency, accumulator.gross.currency)
+        self._data[employee_id] = accumulator
+
+    def items(self) -> list[tuple[EmployeeId, YtdAccumulator]]:
+        return sorted(self._data.items(), key=lambda pair: str(pair[0]))
+
     def record(
         self,
         employee_id: EmployeeId,
