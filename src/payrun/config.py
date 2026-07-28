@@ -14,7 +14,7 @@ from typing import Any
 
 from payrun.errors import ConfigurationError
 
-_REQUIRED_KEYS = ("database_path", "currency", "plan_year")
+_REQUIRED_KEYS = ("database_path", "currency", "plan_year", "frequency")
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,6 +22,7 @@ class Config:
     database_path: str
     currency: str
     plan_year: int
+    frequency: str
 
     @classmethod
     def from_mapping(cls, data: dict[str, Any]) -> Config:
@@ -33,6 +34,7 @@ class Config:
                 database_path=str(data["database_path"]),
                 currency=str(data["currency"]),
                 plan_year=int(data["plan_year"]),
+                frequency=str(data["frequency"]),
             )
         except (TypeError, ValueError) as exc:
             raise ConfigurationError(f"malformed config value: {exc}") from exc

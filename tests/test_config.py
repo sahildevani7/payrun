@@ -6,11 +6,22 @@ from payrun.config import Config, load_config
 from payrun.errors import ConfigurationError
 
 
+def _mapping(**overrides):
+    base = {
+        "database_path": "payrun.db",
+        "currency": "USD",
+        "plan_year": 2026,
+        "frequency": "BIWEEKLY",
+    }
+    base.update(overrides)
+    return base
+
+
 def test_from_mapping_builds_config():
-    config = Config.from_mapping(
-        {"database_path": "payrun.db", "currency": "USD", "plan_year": 2026}
+    config = Config.from_mapping(_mapping())
+    assert config == Config(
+        database_path="payrun.db", currency="USD", plan_year=2026, frequency="BIWEEKLY"
     )
-    assert config == Config(database_path="payrun.db", currency="USD", plan_year=2026)
 
 
 def test_from_mapping_rejects_missing_keys():
@@ -20,16 +31,12 @@ def test_from_mapping_rejects_missing_keys():
 
 def test_from_mapping_rejects_malformed_plan_year():
     with pytest.raises(ConfigurationError):
-        Config.from_mapping(
-            {"database_path": "payrun.db", "currency": "USD", "plan_year": "not-a-year"}
-        )
+        Config.from_mapping(_mapping(plan_year="not-a-year"))
 
 
 def test_load_config_reads_json_file(tmp_path):
     path = tmp_path / "config.json"
-    path.write_text(
-        json.dumps({"database_path": "payrun.db", "currency": "CAD", "plan_year": 2026})
-    )
+    path.write_text(json.dumps(_mapping(currency="CAD")))
     config = load_config(path)
     assert config.currency == "CAD"
 
@@ -54,6 +61,8 @@ def test_load_config_rejects_non_object_json(tmp_path):
 
 
 def test_config_is_frozen():
-    config = Config(database_path="payrun.db", currency="USD", plan_year=2026)
+    config = Config(
+        database_path="payrun.db", currency="USD", plan_year=2026, frequency="BIWEEKLY"
+    )
     with pytest.raises(AttributeError):
         config.plan_year = 2027  # type: ignore[misc]
