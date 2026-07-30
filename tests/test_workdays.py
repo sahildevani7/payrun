@@ -56,3 +56,18 @@ def test_working_days_zero_when_period_is_entirely_a_weekend():
         sequence=1,
     )
     assert working_days(period, HolidayCalendar([])) == 0
+
+
+def test_holiday_on_a_weekend_does_not_double_subtract():
+    period = PayPeriod(
+        start=dt.date(2026, 3, 2),
+        end=dt.date(2026, 3, 8),
+        pay_date=dt.date(2026, 3, 10),
+        sequence=1,
+    )
+    holidays = HolidayCalendar([dt.date(2026, 3, 7)])  # Saturday
+    assert working_days(period, holidays) == 5
+
+
+def test_is_workday_true_for_ordinary_weekday_with_no_holidays():
+    assert is_workday(dt.date(2026, 3, 3), HolidayCalendar([]))

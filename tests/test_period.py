@@ -83,3 +83,36 @@ def test_str_shows_the_span():
         sequence=1,
     )
     assert str(period) == "2026-03-01..2026-03-15"
+
+
+def test_equal_periods_are_equal_and_hashable():
+    a = PayPeriod(
+        start=dt.date(2026, 3, 1), end=dt.date(2026, 3, 15), pay_date=dt.date(2026, 3, 20),
+        sequence=1,
+    )
+    b = PayPeriod(
+        start=dt.date(2026, 3, 1), end=dt.date(2026, 3, 15), pay_date=dt.date(2026, 3, 20),
+        sequence=1,
+    )
+    assert a == b
+    assert hash(a) == hash(b)
+
+
+def test_single_day_period_has_day_span_one():
+    period = PayPeriod(
+        start=dt.date(2026, 3, 1),
+        end=dt.date(2026, 3, 1),
+        pay_date=dt.date(2026, 3, 5),
+        sequence=1,
+    )
+    assert period.day_span == 1
+
+
+def test_pay_date_equal_to_end_is_allowed():
+    period = PayPeriod(
+        start=dt.date(2026, 3, 1),
+        end=dt.date(2026, 3, 15),
+        pay_date=dt.date(2026, 3, 15),
+        sequence=1,
+    )
+    assert period.pay_date == period.end

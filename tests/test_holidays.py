@@ -32,3 +32,16 @@ def test_empty_calendar_has_no_holidays():
     calendar = HolidayCalendar([])
     assert len(calendar) == 0
     assert not calendar.is_holiday(dt.date(2026, 1, 1))
+
+
+def test_between_excludes_dates_outside_the_range():
+    calendar = HolidayCalendar([dt.date(2026, 1, 1), dt.date(2026, 12, 25)])
+    assert calendar.between(dt.date(2026, 2, 1), dt.date(2026, 11, 30)) == []
+
+
+def test_between_includes_dates_exactly_on_the_boundary():
+    calendar = HolidayCalendar([dt.date(2026, 1, 1), dt.date(2026, 12, 25)])
+    assert calendar.between(dt.date(2026, 1, 1), dt.date(2026, 12, 25)) == [
+        dt.date(2026, 1, 1),
+        dt.date(2026, 12, 25),
+    ]

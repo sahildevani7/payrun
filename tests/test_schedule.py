@@ -73,3 +73,30 @@ def test_periods_do_not_overlap_within_a_schedule():
     periods = generate_schedule(2026, Frequency.SEMIMONTHLY)
     for earlier, later in zip(periods, periods[1:], strict=False):
         assert earlier.end < later.start
+
+
+def test_monthly_schedule_handles_february_in_a_leap_year():
+    periods = generate_schedule(2028, Frequency.MONTHLY)
+    assert periods[1].end == dt.date(2028, 2, 29)
+
+
+def test_monthly_schedule_handles_february_in_a_non_leap_year():
+    periods = generate_schedule(2026, Frequency.MONTHLY)
+    assert periods[1].end == dt.date(2026, 2, 28)
+
+
+def test_biweekly_schedule_last_period_end_date():
+    periods = generate_schedule(2026, Frequency.BIWEEKLY)
+    assert periods[-1].end == dt.date(2026, 1, 1) + dt.timedelta(days=26 * 14 - 1)
+
+
+def test_weekly_schedule_sequence_is_contiguous():
+    periods = generate_schedule(2026, Frequency.WEEKLY)
+    assert [p.sequence for p in periods] == list(range(1, 53))
+
+
+def test_semimonthly_first_half_is_always_fifteen_days():
+    for month in range(1, 13):
+        periods = generate_schedule(2026, Frequency.SEMIMONTHLY)
+        first_half = periods[(month - 1) * 2]
+        assert first_half.day_span == 15
