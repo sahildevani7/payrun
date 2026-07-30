@@ -40,3 +40,21 @@ def test_equality_and_ordering():
 
 def test_rate_is_hashable():
     assert hash(Rate(Decimal("0.05"))) == hash(Rate(Decimal("0.05")))
+
+
+def test_rate_can_exceed_one():
+    rate = Rate(Decimal("1.4"))
+    assert rate.of(Money(Decimal("100.00"), "USD")) == Decimal("140.0")
+
+
+def test_from_percent_rejects_non_decimal():
+    with pytest.raises(ValidationError):
+        Rate.from_percent(6.2)  # type: ignore[arg-type]
+
+
+def test_repr_shows_the_value():
+    assert repr(Rate(Decimal("0.05"))) == "Rate(Decimal('0.05'))"
+
+
+def test_not_equal_to_non_rate():
+    assert Rate(Decimal("0.05")) != "0.05"

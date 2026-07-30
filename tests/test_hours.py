@@ -49,3 +49,26 @@ def test_multiplication_rejects_float():
 def test_ordering_and_hashing():
     assert Hours(Decimal("7.75")) < Hours(Decimal("8.00"))
     assert hash(Hours(Decimal("8.00"))) == hash(Hours(Decimal("8.00")))
+
+
+def test_zero_is_a_valid_quarter_hour():
+    assert Hours.zero().value == Decimal("0")
+
+
+def test_repr_shows_the_value():
+    assert repr(Hours(Decimal("8.00"))) == "Hours(Decimal('8.00'))"
+
+
+def test_le_and_ge_boundaries():
+    assert Hours(Decimal("8.00")) <= Hours(Decimal("8.00"))
+    assert Hours(Decimal("8.00")) >= Hours(Decimal("8.00"))
+
+
+def test_not_equal_to_non_hours():
+    assert Hours(Decimal("8.00")) != Decimal("8.00")
+
+
+def test_quarter_and_half_and_three_quarter_increments_are_accepted():
+    assert Hours(Decimal("0.25")).value == Decimal("0.25")
+    assert Hours(Decimal("0.50")).value == Decimal("0.50")
+    assert Hours(Decimal("0.75")).value == Decimal("0.75")

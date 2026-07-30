@@ -32,3 +32,14 @@ def test_ids_order_lexicographically():
 
 def test_different_id_types_are_not_interchangeable():
     assert EmployeeId("E0007") != PayRunId("E0007")
+
+
+@pytest.mark.parametrize("id_type", [EmployeeId, PayRunId, PeriodId])
+def test_rejects_empty_string(id_type):
+    with pytest.raises(ValidationError):
+        id_type("")
+
+
+@pytest.mark.parametrize("id_type", [EmployeeId, PayRunId, PeriodId])
+def test_repr_shows_the_type_and_value(id_type):
+    assert repr(id_type("E0007")) == f"{id_type.__name__}(value='E0007')"

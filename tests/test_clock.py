@@ -33,3 +33,14 @@ def test_system_clock_satisfies_clock_protocol():
 def test_system_clock_today_matches_now_date():
     clock = SystemClock()
     assert clock.today() == clock.now().date()
+
+
+def test_fixed_clock_is_pinned_across_repeated_calls():
+    clock = FixedClock.at(2026, 6, 1)
+    assert clock.now() == clock.now()
+    assert clock.today() == clock.today()
+
+
+def test_fixed_clock_at_leap_day():
+    clock = FixedClock.at(2028, 2, 29)
+    assert clock.today() == dt.date(2028, 2, 29)

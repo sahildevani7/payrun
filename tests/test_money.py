@@ -144,3 +144,46 @@ def test_allocate_single_weight_returns_whole_total():
     total = Money(Decimal("7.77"), "USD")
     shares = allocate(total, [1])
     assert shares == [total]
+
+
+def test_allocate_seven_way_split_sums_exactly():
+    total = Money(Decimal("100.00"), "USD")
+    shares = allocate(total, [1, 1, 1, 1, 1, 1, 1])
+    assert sum((s.amount for s in shares), Decimal(0)) == Decimal("100.00")
+    assert len(shares) == 7
+
+
+def test_allocate_of_zero_total_returns_all_zero_shares():
+    shares = allocate(Money.zero("USD"), [1, 2, 3])
+    assert shares == [Money.zero("USD")] * 3
+
+
+def test_repr_round_trips_through_eval():
+    money = Money(Decimal("12.34"), "USD")
+    assert repr(money) == "Money(Decimal('12.34'), 'USD')"
+
+
+def test_str_shows_amount_and_currency():
+    assert str(Money(Decimal("12.34"), "USD")) == "12.34 USD"
+
+
+def test_le_and_ge_boundaries():
+    a = Money(Decimal("5.00"), "USD")
+    b = Money(Decimal("5.00"), "USD")
+    assert a <= b
+    assert a >= b
+
+
+def test_gt_requires_same_currency():
+    with pytest.raises(CurrencyMismatchError):
+        _ = Money(Decimal("5.00"), "USD") > Money(Decimal("5.00"), "CAD")
+
+
+def test_construction_rejects_int_amount():
+    with pytest.raises(ValidationError):
+        Money(5, "USD")  # type: ignore[arg-type]
+
+
+def test_gbp_and_eur_have_two_decimal_exponents():
+    assert Money(Decimal("1.00"), "GBP").exponent == 2
+    assert Money(Decimal("1.00"), "EUR").exponent == 2
