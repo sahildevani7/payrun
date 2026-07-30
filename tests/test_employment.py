@@ -48,3 +48,22 @@ def test_is_active_on_after_termination_date_is_false():
     )
     assert employment.is_active_on(dt.date(2026, 3, 15))
     assert not employment.is_active_on(dt.date(2026, 3, 16))
+
+
+def test_termination_on_the_same_day_as_hire_is_allowed():
+    employment = Employment(
+        hire_date=dt.date(2026, 3, 15),
+        status=EmploymentStatus.TERMINATED,
+        termination_date=dt.date(2026, 3, 15),
+    )
+    assert employment.is_active_on(dt.date(2026, 3, 15))
+
+
+def test_employment_equality():
+    a = Employment(hire_date=dt.date(2020, 1, 1), status=EmploymentStatus.ACTIVE)
+    b = Employment(hire_date=dt.date(2020, 1, 1), status=EmploymentStatus.ACTIVE)
+    assert a == b
+
+
+def test_employment_status_has_exactly_two_members():
+    assert len(list(EmploymentStatus)) == 2

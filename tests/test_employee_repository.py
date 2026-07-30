@@ -58,3 +58,17 @@ def test_list_all_returns_employees_sorted_by_id():
 
 def test_list_all_on_empty_repository_returns_empty_list():
     assert InMemoryEmployeeRepository().list_all() == []
+
+
+def test_get_does_not_mutate_the_repository():
+    repo = InMemoryEmployeeRepository()
+    repo.add(_employee("E0007"))
+    repo.get(EmployeeId("E0007"))
+    assert len(repo.list_all()) == 1
+
+
+def test_repository_holds_multiple_distinct_employees():
+    repo = InMemoryEmployeeRepository()
+    repo.add(_employee("E0001"))
+    repo.add(_employee("E0002"))
+    assert repo.get(EmployeeId("E0001")).id != repo.get(EmployeeId("E0002")).id

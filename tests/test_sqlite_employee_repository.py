@@ -89,3 +89,24 @@ def test_list_all_returns_employees_sorted_by_id(repository):
     repository.add(_salaried_employee("E0001"))
     repository.add(_salaried_employee("E0005"))
     assert [str(e.id) for e in repository.list_all()] == ["E0001", "E0005", "E0009"]
+
+
+def test_round_trips_an_active_employment_with_no_termination_date(repository):
+    employee = _salaried_employee("E0007")
+    repository.add(employee)
+    round_tripped = repository.get(EmployeeId("E0007"))
+    assert round_tripped.employment.termination_date is None
+    assert round_tripped.employment.status.value == "ACTIVE"
+
+
+def test_round_trip_preserves_frequency(repository):
+    employee = Employee(
+        id=EmployeeId("E0010"),
+        first_name="Priya",
+        last_name="Nair",
+        frequency=Frequency.WEEKLY,
+        employment=Employment(hire_date=dt.date(2022, 5, 1), status=EmploymentStatus.ACTIVE),
+        compensation=SalariedCompensation(Money(Decimal("52000.00"), "USD")),
+    )
+    repository.add(employee)
+    assert repository.get(EmployeeId("E0010")).frequency == Frequency.WEEKLY

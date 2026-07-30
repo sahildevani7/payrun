@@ -75,3 +75,35 @@ def test_employee_is_frozen():
     )
     with pytest.raises(AttributeError):
         employee.first_name = "Sam"  # type: ignore[misc]
+
+
+def test_full_name_strips_no_internal_whitespace():
+    employee = Employee(
+        id=EmployeeId("E0007"),
+        first_name="Mary Jane",
+        last_name="Watson",
+        frequency=Frequency.BIWEEKLY,
+        employment=_employment(),
+        compensation=SalariedCompensation(Money(Decimal("78000.00"), "USD")),
+    )
+    assert employee.full_name == "Mary Jane Watson"
+
+
+def test_equal_employees_are_equal():
+    employee_a = Employee(
+        id=EmployeeId("E0007"),
+        first_name="Jordan",
+        last_name="Lee",
+        frequency=Frequency.BIWEEKLY,
+        employment=_employment(),
+        compensation=SalariedCompensation(Money(Decimal("78000.00"), "USD")),
+    )
+    employee_b = Employee(
+        id=EmployeeId("E0007"),
+        first_name="Jordan",
+        last_name="Lee",
+        frequency=Frequency.BIWEEKLY,
+        employment=_employment(),
+        compensation=SalariedCompensation(Money(Decimal("78000.00"), "USD")),
+    )
+    assert employee_a == employee_b
