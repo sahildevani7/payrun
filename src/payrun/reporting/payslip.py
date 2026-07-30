@@ -16,6 +16,9 @@ def payslip_lines(payslip: PaySlip) -> list[str]:
     lines.append("Deductions:")
     for deduction in payslip.deductions:
         lines.append(f"  {deduction.code}: {deduction.amount}")
+    lines.append("Employer Contributions:")
+    for contribution in payslip.employer_contributions:
+        lines.append(f"  {contribution.code}: {contribution.amount}")
     lines.append(f"Gross: {payslip.gross}")
     lines.append(f"Net: {payslip.net}")
     return lines

@@ -12,7 +12,7 @@ from payrun.reporting.payslip import payslip_lines
 from payrun.run.result import PaySlip
 
 
-def _payslip() -> PaySlip:
+def _payslip(employer_contributions: tuple[DeductionLine, ...] = ()) -> PaySlip:
     return PaySlip(
         employee_id=EmployeeId("E0007"),
         period=PayPeriod(
@@ -23,7 +23,7 @@ def _payslip() -> PaySlip:
         ),
         earnings=(EarningLine(EarningCode("REGULAR"), Money(Decimal("2000.00"), "USD")),),
         deductions=(DeductionLine(DeductionCode("TAX"), Money(Decimal("200.00"), "USD")),),
-        employer_contributions=(),
+        employer_contributions=employer_contributions,
         gross=Money(Decimal("2000.00"), "USD"),
         net=Money(Decimal("1800.00"), "USD"),
     )
@@ -55,3 +55,18 @@ def test_section_headers_present():
     lines = payslip_lines(_payslip())
     assert "Earnings:" in lines
     assert "Deductions:" in lines
+    assert "Employer Contributions:" in lines
+
+
+def test_includes_each_employer_contribution_line():
+    employer_contributions = (
+        DeductionLine(DeductionCode("PENSION"), Money(Decimal("100.00"), "USD")),
+    )
+    lines = payslip_lines(_payslip(employer_contributions))
+    assert "  PENSION: 100.00 USD" in lines
+
+
+def test_employer_contributions_section_present_even_when_empty():
+    lines = payslip_lines(_payslip())
+    index = lines.index("Employer Contributions:")
+    assert lines[index + 1] == "Gross: 2000.00 USD"
