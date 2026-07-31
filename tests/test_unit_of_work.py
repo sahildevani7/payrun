@@ -42,3 +42,23 @@ def test_returns_the_wrapped_connection():
             assert inner is conn
     finally:
         conn.close()
+
+
+def test_multiple_statements_in_one_unit_commit_together(connection):
+    with UnitOfWork(connection) as conn:
+        conn.execute(
+            "INSERT INTO employees VALUES "
+            "('E1','A','B','WEEKLY','2020-01-01','ACTIVE',NULL,'HOURLY','10.00','USD')"
+        )
+        conn.execute(
+            "INSERT INTO employees VALUES "
+            "('E2','C','D','WEEKLY','2020-01-01','ACTIVE',NULL,'HOURLY','10.00','USD')"
+        )
+    rows = connection.execute("SELECT id FROM employees ORDER BY id").fetchall()
+    assert [row["id"] for row in rows] == ["E1", "E2"]
+
+
+def test_empty_unit_of_work_commits_cleanly(connection):
+    with UnitOfWork(connection):
+        pass
+    assert connection.execute("SELECT COUNT(*) AS n FROM employees").fetchone()["n"] == 0

@@ -61,3 +61,20 @@ def test_failing_migration_raises_and_leaves_schema_migrations_untouched(connect
     with pytest.raises(MigrationError):
         runner.run(connection)
     assert runner.applied(connection) == []
+
+
+def test_applied_on_a_fresh_connection_is_empty(connection):
+    assert MigrationRunner().applied(connection) == []
+
+
+def test_run_with_no_migrations_configured_applies_nothing(connection):
+    assert MigrationRunner([]).run(connection) == []
+
+
+def test_default_migrations_list_matches_module_migrations():
+    from payrun.storage.migrations.runner import MIGRATIONS
+
+    assert [m.name for m in MIGRATIONS] == [
+        "0001_create_employees",
+        "0002_create_run_tables",
+    ]

@@ -96,3 +96,23 @@ def test_save_overwrites_a_previously_saved_payslip(repository):
     repository.save(PayRunResult(period=_period(), payslips=(updated,)))
     round_tripped = repository.get_payslip(EmployeeId("E0001"), _period().start)
     assert round_tripped.net == Money(Decimal("1200.00"), "USD")
+
+
+def test_round_trip_preserves_earning_hours(repository):
+    result = PayRunResult(period=_period(), payslips=(_payslip("E0001"),))
+    repository.save(result)
+    round_tripped = repository.get_payslip(EmployeeId("E0001"), _period().start)
+    assert round_tripped.earnings[0].hours == Hours(Decimal("40"))
+
+
+def test_round_trip_preserves_employer_contributions(repository):
+    result = PayRunResult(period=_period(), payslips=(_payslip("E0001"),))
+    repository.save(result)
+    round_tripped = repository.get_payslip(EmployeeId("E0001"), _period().start)
+    assert round_tripped.employer_contributions == _payslip("E0001").employer_contributions
+
+
+def test_get_register_on_a_run_of_one_employee(repository):
+    repository.save(PayRunResult(period=_period(), payslips=(_payslip("E0001"),)))
+    register = repository.get_register(_period().start)
+    assert len(register.payslips) == 1
