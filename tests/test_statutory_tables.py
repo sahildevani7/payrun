@@ -46,3 +46,18 @@ def test_unknown_plan_year_raises_parameter_not_found():
 
 def test_loading_the_same_plan_year_twice_returns_equal_parameters():
     assert load_parameters(2026) == load_parameters(2026)
+
+
+def test_loading_the_same_plan_year_twice_returns_the_same_object():
+    assert load_parameters(2026) is load_parameters(2026)
+
+
+def test_parameter_not_found_error_names_the_plan_year():
+    with pytest.raises(ParameterNotFoundError, match="1999"):
+        load_parameters(1999)
+
+
+def test_tax_brackets_are_ordered_ascending_by_threshold():
+    params = load_parameters(2026)
+    thresholds = [bracket.threshold.amount for bracket in params.tax.brackets]
+    assert thresholds == sorted(thresholds)

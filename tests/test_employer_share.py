@@ -28,3 +28,13 @@ def test_zero_multiplier_produces_zero_share():
 def test_rounds_half_up_to_the_cent():
     share = employer_share(Money(Decimal("10.005"), "USD"), Rate(Decimal("1.0")))
     assert share == Money(Decimal("10.01"), "USD")
+
+
+def test_zero_employee_contribution_gives_zero_share():
+    share = employer_share(Money.zero("USD"), Rate(Decimal("1.4")))
+    assert share == Money.zero("USD")
+
+
+def test_preserves_currency():
+    share = employer_share(Money(Decimal("100.00"), "CAD"), Rate(Decimal("1.0")))
+    assert share.currency == "CAD"
