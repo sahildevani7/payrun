@@ -52,3 +52,14 @@ def test_rejects_bracket_currency_mismatch():
     mismatched = [TaxBracket(Money(Decimal("0.00"), "CAD"), Rate(Decimal("0.10")))]
     with pytest.raises(ValidationError):
         compute_tax(Money(Decimal("100.00"), "USD"), mismatched)
+
+
+def test_single_bracket_table_taxes_everything_at_one_rate():
+    brackets = [TaxBracket(Money(Decimal("0.00"), "USD"), Rate(Decimal("0.15")))]
+    tax = compute_tax(Money(Decimal("1000.00"), "USD"), brackets)
+    assert tax == Money(Decimal("150.00"), "USD")
+
+
+def test_income_just_below_a_threshold_stays_in_the_lower_bracket():
+    tax = compute_tax(Money(Decimal("9999.99"), "USD"), _brackets())
+    assert tax == Money(Decimal("1000.00"), "USD")

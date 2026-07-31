@@ -50,3 +50,13 @@ def test_low_income_within_credit_withholds_nothing():
     calculator = WithholdingCalculator(_params(), Frequency.MONTHLY)
     withheld = calculator.calculate(Money(Decimal("400.00"), "USD"))
     assert withheld == Money.zero("USD")
+
+
+def test_weekly_withholding_is_smaller_than_monthly_for_the_same_gross():
+    weekly = WithholdingCalculator(_params(), Frequency.WEEKLY).calculate(
+        Money(Decimal("1000.00"), "USD")
+    )
+    monthly = WithholdingCalculator(_params(), Frequency.MONTHLY).calculate(
+        Money(Decimal("1000.00"), "USD")
+    )
+    assert weekly > monthly

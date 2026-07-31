@@ -22,3 +22,13 @@ def test_credit_equal_to_tax_is_zero():
 def test_zero_credit_leaves_tax_unchanged():
     result = apply_credit(Money(Decimal("500.00"), "USD"), Money.zero("USD"))
     assert result == Money(Decimal("500.00"), "USD")
+
+
+def test_zero_tax_with_zero_credit_is_zero():
+    result = apply_credit(Money.zero("USD"), Money.zero("USD"))
+    assert result == Money.zero("USD")
+
+
+def test_credit_preserves_currency():
+    result = apply_credit(Money(Decimal("500.00"), "CAD"), Money(Decimal("100.00"), "CAD"))
+    assert result.currency == "CAD"
