@@ -22,3 +22,15 @@ def test_zero_rate_produces_zero_deduction():
     calculator = PercentageDeductionCalculator(DeductionCode("UNION"), Rate.zero())
     line = calculator.calculate(Money(Decimal("2000.00"), "USD"))
     assert line.amount == Money.zero("USD")
+
+
+def test_percentage_deduction_of_zero_gross_is_zero():
+    calculator = PercentageDeductionCalculator(DeductionCode("UNION"), Rate(Decimal("0.02")))
+    line = calculator.calculate(Money.zero("USD"))
+    assert line.amount == Money.zero("USD")
+
+
+def test_percentage_deduction_preserves_currency():
+    calculator = PercentageDeductionCalculator(DeductionCode("UNION"), Rate(Decimal("0.02")))
+    line = calculator.calculate(Money(Decimal("2000.00"), "CAD"))
+    assert line.amount.currency == "CAD"

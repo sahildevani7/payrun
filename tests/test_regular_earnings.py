@@ -63,3 +63,21 @@ def test_salaried_pay_ignores_hours_argument():
     with_zero_hours = RegularEarningCalculator().calculate(employee, Hours.zero())
     with_some_hours = RegularEarningCalculator().calculate(employee, Hours(Decimal("10")))
     assert with_zero_hours.amount == with_some_hours.amount
+
+
+def test_hourly_pay_of_zero_hours_is_zero():
+    employee = _employee(Frequency.WEEKLY, HourlyCompensation(Money(Decimal("32.50"), "USD")))
+    line = RegularEarningCalculator().calculate(employee, Hours.zero())
+    assert line.amount == Money.zero("USD")
+
+
+def test_regular_earning_code_is_stable():
+    assert str(RegularEarningCalculator().code) == "REGULAR"
+
+
+def test_weekly_salaried_pay_divides_by_fifty_two():
+    employee = _employee(
+        Frequency.WEEKLY, SalariedCompensation(Money(Decimal("52000.00"), "USD"))
+    )
+    line = RegularEarningCalculator().calculate(employee, Hours.zero())
+    assert line.amount == Money(Decimal("1000.00"), "USD")

@@ -67,3 +67,12 @@ def test_rejects_salaried_employees():
     )
     with pytest.raises(ValidationError):
         default_calculator().calculate(employee, Hours(Decimal("45")))
+
+
+def test_overtime_earning_code_is_stable():
+    assert str(default_calculator().code) == "OVERTIME"
+
+
+def test_overtime_hours_reflect_only_the_excess():
+    line = default_calculator().calculate(_hourly_employee("20.00"), Hours(Decimal("42.5")))
+    assert line.hours == Hours(Decimal("2.5"))

@@ -24,3 +24,12 @@ def test_str_returns_normalized_value():
 
 def test_codes_order_lexicographically():
     assert EarningCode("REGULAR") > EarningCode("OVERTIME")
+
+
+def test_rejects_non_string_value():
+    with pytest.raises(ValidationError):
+        EarningCode(123)  # type: ignore[arg-type]
+
+
+def test_not_equal_to_plain_string():
+    assert EarningCode("REGULAR") != "REGULAR"

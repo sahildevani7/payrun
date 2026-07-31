@@ -20,3 +20,14 @@ def test_flat_deduction_rejects_currency_mismatch():
     calculator = FlatDeductionCalculator(DeductionCode("PARKING"), Money(Decimal("25.00"), "USD"))
     with pytest.raises(CurrencyMismatchError):
         calculator.calculate(Money(Decimal("100.00"), "CAD"))
+
+
+def test_flat_deduction_carries_its_code():
+    calculator = FlatDeductionCalculator(DeductionCode("PARKING"), Money(Decimal("25.00"), "USD"))
+    assert calculator.code == DeductionCode("PARKING")
+    assert calculator.calculate(Money(Decimal("100.00"), "USD")).code == DeductionCode("PARKING")
+
+
+def test_flat_deduction_of_zero_gross():
+    calculator = FlatDeductionCalculator(DeductionCode("PARKING"), Money(Decimal("25.00"), "USD"))
+    assert calculator.calculate(Money.zero("USD")).amount == Money(Decimal("25.00"), "USD")

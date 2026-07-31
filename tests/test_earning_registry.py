@@ -43,3 +43,13 @@ def test_overtime_calculator_satisfies_the_protocol():
 
 def test_overtime_calculator_is_the_only_registered_implementation_type():
     assert isinstance(default_calculator(), OvertimeEarningCalculator)
+
+
+def test_empty_registry_has_no_codes():
+    assert EarningRegistry().codes() == []
+
+
+def test_not_found_error_message_names_the_code():
+    registry = EarningRegistry()
+    with pytest.raises(NotFoundError, match="REGULAR"):
+        registry.get(RegularEarningCalculator().code)

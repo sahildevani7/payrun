@@ -52,3 +52,15 @@ def test_flat_calculator_satisfies_the_protocol():
 
 def test_percentage_calculator_satisfies_the_protocol():
     assert isinstance(_percentage(), DeductionCalculator)
+
+
+def test_empty_registry_has_no_codes():
+    assert DeductionRegistry().codes() == []
+
+
+def test_registry_can_hold_more_than_two_calculators():
+    registry = DeductionRegistry()
+    registry.register(_flat())
+    registry.register(_percentage())
+    registry.register(FlatDeductionCalculator(DeductionCode("GYM"), Money(Decimal("15.00"), "USD")))
+    assert [str(c) for c in registry.codes()] == ["GYM", "PARKING", "UNION"]
