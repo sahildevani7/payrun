@@ -1,6 +1,6 @@
 """An injected table of holiday dates.
 
-Nothing in this module knows today's date or any jurisdiction's actual
+Nothing in this module knows today's date or any real place's actual
 holiday calendar. The caller supplies the dates.
 """
 

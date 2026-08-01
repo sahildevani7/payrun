@@ -27,14 +27,13 @@ loading path.
 
 ## Pension and insurance
 
-Both are single-tier: one rate, one annual exemption or maximum, no
-per-jurisdiction split. `PensionCalculator` and `InsuranceCalculator` each
-take the period's gross and the employee's year-to-date contribution, and
-return the smaller of "rate times this period's taxable amount" and
-"whatever room is left under the annual maximum." This keeps the running
-total inside the ceiling at every period without ever needing a true-up
-step — a short final period is not owed a make-up contribution, because
-the base repository's ceiling is a cap, not a target to land on exactly.
+Both use one rate and one annual exemption or maximum. `PensionCalculator`
+and `InsuranceCalculator` each take the period's gross and the employee's
+year-to-date contribution, and return the smaller of "rate times this
+period's taxable amount" and "whatever room is left under the annual
+maximum." This keeps the running total inside the ceiling at every period —
+the ceiling is a cap on what can be withheld, not a target the final period
+is required to land on exactly.
 
 ## Tax brackets
 

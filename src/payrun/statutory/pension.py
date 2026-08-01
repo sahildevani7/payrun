@@ -1,11 +1,9 @@
-"""Single-tier pension contribution: rate over a per-period exemption, capped
-at the annual maximum.
+"""Pension contribution: rate over a per-period exemption, capped at the
+annual maximum.
 
 The caller supplies year-to-date contributions so far. This calculator caps
 the current period's contribution at whatever room remains under the annual
-maximum, so the running total across a year never exceeds it. It does not
-true up a short final period to land exactly on the maximum — that
-reconciliation is a second-tier concern.
+maximum, so the running total across a year never exceeds it.
 """
 
 from __future__ import annotations

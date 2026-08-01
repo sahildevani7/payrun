@@ -2,9 +2,7 @@
 
 The period's gross is multiplied out to an annual figure, taxed against the
 bracket table, reduced by the basic credit, and divided back down to a
-per-period withholding amount. This is the only withholding method the base
-repository ships — a bonus method that switches and caps differently is a
-separate concern.
+per-period withholding amount.
 """
 
 from __future__ import annotations
