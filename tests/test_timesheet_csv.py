@@ -82,3 +82,19 @@ def test_aggregate_hours_sums_per_employee():
 
 def test_aggregate_hours_of_empty_entries_is_empty_dict():
     assert aggregate_hours([]) == {}
+
+
+def test_rejects_hours_column_with_negative_value():
+    content = "employee_id,work_date,hours\nE0001,2026-03-02,-8.00\n"
+    with pytest.raises(ImporterError):
+        TimesheetCsvImporter().parse(content)
+
+
+def test_parses_rows_for_multiple_employees():
+    content = (
+        "employee_id,work_date,hours\n"
+        "E0001,2026-03-02,8.00\n"
+        "E0002,2026-03-02,6.00\n"
+    )
+    entries = TimesheetCsvImporter().parse(content)
+    assert {e.employee_id for e in entries} == {EmployeeId("E0001"), EmployeeId("E0002")}

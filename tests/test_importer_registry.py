@@ -34,3 +34,7 @@ def test_names_are_sorted():
 
 def test_timesheet_csv_importer_satisfies_the_protocol():
     assert isinstance(TimesheetCsvImporter(), Importer)
+
+
+def test_empty_registry_has_no_names():
+    assert ImporterRegistry().names() == []

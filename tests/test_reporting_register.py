@@ -51,3 +51,15 @@ def test_one_row_per_payslip_in_payslip_order():
 def test_empty_run_has_only_the_header():
     result = PayRunResult(period=_period(), payslips=())
     assert register_lines(result) == ["Pay Run Register: 2026-03-01..2026-03-15"]
+
+
+def test_register_has_one_line_per_payslip_plus_header():
+    result = PayRunResult(
+        period=_period(),
+        payslips=(
+            _payslip("E0001", "2000.00", "1800.00"),
+            _payslip("E0002", "3000.00", "2600.00"),
+            _payslip("E0003", "1500.00", "1350.00"),
+        ),
+    )
+    assert len(register_lines(result)) == 4
