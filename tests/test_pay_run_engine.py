@@ -171,3 +171,33 @@ def test_employer_contributions_use_the_configured_multiplier():
     )
     # employer pension multiplier for plan year 2026 is a dollar-for-dollar match
     assert employer_pension == employee_pension
+
+
+def test_mixed_hourly_and_salaried_employees_in_one_run():
+    engine = _build_engine(Frequency.MONTHLY)
+    hours = {EmployeeId("E0002"): Hours(Decimal("40"))}
+    result = engine.run([_salaried("E0001"), _hourly("E0002")], _period(), hours)
+    assert {str(p.employee_id) for p in result.payslips} == {"E0001", "E0002"}
+
+
+def test_deductions_are_sorted_by_code():
+    engine = _build_engine(Frequency.MONTHLY, with_parking_deduction=True)
+    result = engine.run(
+        [_salaried("E0001")],
+        _period(),
+        {},
+        voluntary_codes_by_employee={EmployeeId("E0001"): [DeductionCode("PARKING")]},
+    )
+    payslip = result.payslip_for(EmployeeId("E0001"))
+    codes = [str(line.code) for line in payslip.deductions]
+    assert codes == sorted(codes)
+
+
+def test_earnings_are_sorted_by_code():
+    engine = _build_engine(Frequency.MONTHLY)
+    result = engine.run(
+        [_hourly("E0002")], _period(), {EmployeeId("E0002"): Hours(Decimal("45"))}
+    )
+    payslip = result.payslip_for(EmployeeId("E0002"))
+    codes = [str(line.code) for line in payslip.earnings]
+    assert codes == ["OVERTIME", "REGULAR"]

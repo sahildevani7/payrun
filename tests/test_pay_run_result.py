@@ -50,3 +50,15 @@ def test_payslip_holds_gross_and_net():
     payslip = _payslip("E0001")
     assert payslip.gross == Money(Decimal("2000.00"), "USD")
     assert payslip.net == Money(Decimal("1800.00"), "USD")
+
+
+def test_empty_pay_run_result_has_no_payslips():
+    result = PayRunResult(period=_period(), payslips=())
+    assert result.payslips == ()
+
+
+def test_payslip_for_finds_the_right_slip_among_several():
+    result = PayRunResult(
+        period=_period(), payslips=(_payslip("E0001"), _payslip("E0002"), _payslip("E0003"))
+    )
+    assert result.payslip_for(EmployeeId("E0003")).employee_id == EmployeeId("E0003")

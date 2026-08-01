@@ -79,3 +79,27 @@ def test_accepts_hourly_employee_with_timesheet_hours():
         compensation=HourlyCompensation(Money(Decimal("32.50"), "USD")),
     )
     validate_run([employee], _period(), {EmployeeId("E0002"): Hours(Decimal("80"))})
+
+
+def test_accepts_multiple_distinct_active_employees():
+    employees = [
+        _salaried("E0001", dt.date(2020, 1, 1)),
+        _salaried("E0002", dt.date(2020, 1, 1)),
+    ]
+    validate_run(employees, _period(), {})
+
+
+def test_employee_terminated_exactly_on_period_end_is_active():
+    employee = Employee(
+        id=EmployeeId("E0001"),
+        first_name="Jordan",
+        last_name="Lee",
+        frequency=Frequency.SEMIMONTHLY,
+        employment=Employment(
+            hire_date=dt.date(2020, 1, 1),
+            status=EmploymentStatus.TERMINATED,
+            termination_date=dt.date(2026, 3, 15),
+        ),
+        compensation=SalariedCompensation(Money(Decimal("78000.00"), "USD")),
+    )
+    validate_run([employee], _period(), {})
