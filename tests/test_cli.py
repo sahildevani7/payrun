@@ -147,3 +147,28 @@ def test_missing_command_exits_nonzero():
     with pytest.raises(SystemExit) as exc_info:
         main([])
     assert exc_info.value.code != 0
+
+
+def test_invalid_frequency_choice_exits_nonzero(config_path):
+    with pytest.raises(SystemExit) as exc_info:
+        main(
+            [
+                "--config", str(config_path), "employees", "add", "--id", "E0001",
+                "--first-name", "Jordan", "--last-name", "Lee", "--frequency", "YEARLY",
+                "--hire-date", "2020-01-01", "--pay-type", "SALARIED", "--amount", "78000.00",
+            ]
+        )
+    assert exc_info.value.code != 0
+
+
+def test_register_for_missing_period_fails(config_path, capsys):
+    exit_code = _run(config_path, "register", "--period", "2026-03-01")
+    assert exit_code == 1
+    assert "error:" in capsys.readouterr().err
+
+
+def test_payslip_invalid_period_format_fails(config_path, capsys):
+    _add_salaried_employee(config_path)
+    exit_code = _run(config_path, "payslip", "--employee", "E0001", "--period", "not-a-date")
+    assert exit_code == 1
+    assert "error:" in capsys.readouterr().err
