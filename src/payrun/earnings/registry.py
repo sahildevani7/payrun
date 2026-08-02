@@ -11,6 +11,9 @@ from typing import Protocol, runtime_checkable
 
 from payrun.earnings.code import EarningCode
 from payrun.earnings.line import EarningLine
+from payrun.earnings.overtime import OvertimeEarningCalculator
+from payrun.earnings.overtime import default_calculator as default_overtime_calculator
+from payrun.earnings.regular import RegularEarningCalculator
 from payrun.errors import NotFoundError, ValidationError
 from payrun.hours import Hours
 from payrun.people.employee import Employee
@@ -40,3 +43,19 @@ class EarningRegistry:
 
     def codes(self) -> list[EarningCode]:
         return sorted(self._calculators, key=str)
+
+
+def default_registry(
+    overtime_calculator: OvertimeEarningCalculator | None = None,
+) -> EarningRegistry:
+    """The registry every pay run needs at minimum: regular and overtime.
+
+    Pass `overtime_calculator` when the caller needs a non-default weekly
+    threshold or multiplier — callers that also cap regular hours at a
+    threshold (see `run.factory.build_engine`) must use the same instance
+    for both, or the two would disagree about which hours are overtime.
+    """
+    registry = EarningRegistry()
+    registry.register(RegularEarningCalculator())
+    registry.register(overtime_calculator or default_overtime_calculator())
+    return registry

@@ -1,7 +1,8 @@
 import pytest
 
+from payrun.earnings.code import EarningCode
 from payrun.earnings.overtime import OvertimeEarningCalculator, default_calculator
-from payrun.earnings.registry import EarningCalculator, EarningRegistry
+from payrun.earnings.registry import EarningCalculator, EarningRegistry, default_registry
 from payrun.earnings.regular import RegularEarningCalculator
 from payrun.errors import NotFoundError, ValidationError
 
@@ -53,3 +54,14 @@ def test_not_found_error_message_names_the_code():
     registry = EarningRegistry()
     with pytest.raises(NotFoundError, match="REGULAR"):
         registry.get(RegularEarningCalculator().code)
+
+
+def test_default_registry_has_regular_and_overtime():
+    registry = default_registry()
+    assert [str(c) for c in registry.codes()] == ["OVERTIME", "REGULAR"]
+
+
+def test_default_registry_returns_a_fresh_registry_each_call():
+    first = default_registry()
+    second = default_registry()
+    assert first.get(EarningCode("REGULAR")) is not second.get(EarningCode("REGULAR"))
