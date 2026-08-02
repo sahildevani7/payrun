@@ -10,21 +10,12 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-from decimal import Decimal
 
 from payrun.calendarx.frequency import Frequency
-from payrun.calendarx.schedule import generate_schedule
+from payrun.calendarx.plan_calendar import PlanCalendar
 from payrun.config import Config
-from payrun.deductions.registry import DeductionRegistry
-from payrun.earnings.overtime import default_calculator
-from payrun.earnings.registry import EarningRegistry
-from payrun.earnings.regular import RegularEarningCalculator
 from payrun.errors import ConfigurationError, RunError
-from payrun.hours import Hours
-from payrun.run.engine import PayRunEngine
-from payrun.statutory.insurance import InsuranceCalculator
-from payrun.statutory.pension import PensionCalculator
-from payrun.statutory.tables import load_parameters
+from payrun.run.factory import build_engine
 from payrun.storage.engine import connect_and_migrate
 from payrun.storage.repositories import (
     SqliteEmployeeRepository,
@@ -33,7 +24,6 @@ from payrun.storage.repositories import (
     load_ytd_store,
     save_ytd_store,
 )
-from payrun.tax.withholding import WithholdingCalculator
 
 
 def add_subparser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -53,12 +43,8 @@ def run(args: argparse.Namespace, config: Config) -> int:
     except ValueError as exc:
         raise ConfigurationError(f"invalid frequency in config: {exc}") from exc
 
-    schedule = generate_schedule(config.plan_year, frequency)
-    period = next((p for p in schedule if p.start == period_start), None)
-    if period is None:
-        raise RunError(
-            f"no {frequency.value} period starts on {period_start} in plan year {config.plan_year}"
-        )
+    calendar = PlanCalendar(config.plan_year, frequency)
+    period = calendar.period_starting(period_start)
 
     connection = connect_and_migrate(config.database_path)
     try:
@@ -71,24 +57,11 @@ def run(args: argparse.Namespace, config: Config) -> int:
             raise RunError(f"no employees with frequency {frequency.value} to run")
 
         hours_by_employee = SqliteTimesheetRepository(connection).hours_for_period(period)
-
-        earning_registry = EarningRegistry()
-        earning_registry.register(RegularEarningCalculator())
-        earning_registry.register(default_calculator())
-
-        params = load_parameters(config.plan_year)
         ytd_store = load_ytd_store(connection, config.currency)
-
-        engine = PayRunEngine(
+        engine = build_engine(
             currency=config.currency,
-            earning_registry=earning_registry,
-            deduction_registry=DeductionRegistry(),
-            weekly_overtime_threshold=Hours(Decimal("40")),
-            pension_calculator=PensionCalculator(params.pension, frequency),
-            insurance_calculator=InsuranceCalculator(params.insurance),
-            withholding_calculator=WithholdingCalculator(params.tax, frequency),
-            employer_pension_multiplier=params.employer.pension_multiplier,
-            employer_insurance_multiplier=params.employer.insurance_multiplier,
+            plan_year=config.plan_year,
+            frequency=frequency,
             ytd_store=ytd_store,
         )
 
