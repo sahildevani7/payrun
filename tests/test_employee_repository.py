@@ -13,13 +13,18 @@ from payrun.people.employment import Employment, EmploymentStatus
 from payrun.people.repository import EmployeeRepository, InMemoryEmployeeRepository
 
 
-def _employee(employee_id: str) -> Employee:
+def _employee(
+    employee_id: str,
+    frequency: Frequency = Frequency.BIWEEKLY,
+    employment: Employment | None = None,
+) -> Employee:
     return Employee(
         id=EmployeeId(employee_id),
         first_name="Jordan",
         last_name="Lee",
-        frequency=Frequency.BIWEEKLY,
-        employment=Employment(hire_date=dt.date(2020, 1, 1), status=EmploymentStatus.ACTIVE),
+        frequency=frequency,
+        employment=employment
+        or Employment(hire_date=dt.date(2020, 1, 1), status=EmploymentStatus.ACTIVE),
         compensation=SalariedCompensation(Money(Decimal("78000.00"), "USD")),
     )
 
@@ -72,3 +77,44 @@ def test_repository_holds_multiple_distinct_employees():
     repo.add(_employee("E0001"))
     repo.add(_employee("E0002"))
     assert repo.get(EmployeeId("E0001")).id != repo.get(EmployeeId("E0002")).id
+
+
+def test_list_by_frequency_filters_to_the_matching_frequency():
+    repo = InMemoryEmployeeRepository()
+    repo.add(_employee("E0001", frequency=Frequency.WEEKLY))
+    repo.add(_employee("E0002", frequency=Frequency.MONTHLY))
+    assert [str(e.id) for e in repo.list_by_frequency(Frequency.WEEKLY)] == ["E0001"]
+
+
+def test_list_by_frequency_with_no_matches_is_empty():
+    repo = InMemoryEmployeeRepository()
+    repo.add(_employee("E0001", frequency=Frequency.WEEKLY))
+    assert repo.list_by_frequency(Frequency.MONTHLY) == []
+
+
+def test_list_active_on_excludes_employees_not_yet_hired():
+    repo = InMemoryEmployeeRepository()
+    repo.add(
+        _employee(
+            "E0001",
+            employment=Employment(hire_date=dt.date(2026, 6, 1), status=EmploymentStatus.ACTIVE),
+        )
+    )
+    assert repo.list_active_on(dt.date(2026, 1, 1)) == []
+    assert len(repo.list_active_on(dt.date(2026, 6, 1))) == 1
+
+
+def test_list_active_on_excludes_terminated_employees():
+    repo = InMemoryEmployeeRepository()
+    repo.add(
+        _employee(
+            "E0001",
+            employment=Employment(
+                hire_date=dt.date(2020, 1, 1),
+                status=EmploymentStatus.TERMINATED,
+                termination_date=dt.date(2026, 1, 15),
+            ),
+        )
+    )
+    assert repo.list_active_on(dt.date(2026, 1, 15)) != []
+    assert repo.list_active_on(dt.date(2026, 1, 16)) == []
