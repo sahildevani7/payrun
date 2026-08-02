@@ -110,3 +110,52 @@ def test_round_trip_preserves_frequency(repository):
     )
     repository.add(employee)
     assert repository.get(EmployeeId("E0010")).frequency == Frequency.WEEKLY
+
+
+def test_list_by_frequency_filters_to_the_matching_frequency(repository):
+    repository.add(_salaried_employee("E0001"))
+    repository.add(
+        Employee(
+            id=EmployeeId("E0002"),
+            first_name="Ada",
+            last_name="Okafor",
+            frequency=Frequency.WEEKLY,
+            employment=Employment(hire_date=dt.date(2020, 1, 1), status=EmploymentStatus.ACTIVE),
+            compensation=HourlyCompensation(Money(Decimal("32.50"), "USD")),
+        )
+    )
+    assert [str(e.id) for e in repository.list_by_frequency(Frequency.BIWEEKLY)] == ["E0001"]
+
+
+def test_list_active_on_excludes_employees_not_yet_hired(repository):
+    repository.add(
+        Employee(
+            id=EmployeeId("E0001"),
+            first_name="Jordan",
+            last_name="Lee",
+            frequency=Frequency.MONTHLY,
+            employment=Employment(hire_date=dt.date(2026, 6, 1), status=EmploymentStatus.ACTIVE),
+            compensation=SalariedCompensation(Money(Decimal("78000.00"), "USD")),
+        )
+    )
+    assert repository.list_active_on(dt.date(2026, 1, 1)) == []
+    assert len(repository.list_active_on(dt.date(2026, 6, 1))) == 1
+
+
+def test_list_active_on_excludes_terminated_employees(repository):
+    repository.add(
+        Employee(
+            id=EmployeeId("E0001"),
+            first_name="Jordan",
+            last_name="Lee",
+            frequency=Frequency.MONTHLY,
+            employment=Employment(
+                hire_date=dt.date(2020, 1, 1),
+                status=EmploymentStatus.TERMINATED,
+                termination_date=dt.date(2026, 1, 15),
+            ),
+            compensation=SalariedCompensation(Money(Decimal("78000.00"), "USD")),
+        )
+    )
+    assert len(repository.list_active_on(dt.date(2026, 1, 15))) == 1
+    assert repository.list_active_on(dt.date(2026, 1, 16)) == []

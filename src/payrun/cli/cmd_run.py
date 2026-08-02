@@ -48,11 +48,7 @@ def run(args: argparse.Namespace, config: Config) -> int:
 
     connection = connect_and_migrate(config.database_path)
     try:
-        employees = [
-            employee
-            for employee in SqliteEmployeeRepository(connection).list_all()
-            if employee.frequency is frequency
-        ]
+        employees = SqliteEmployeeRepository(connection).list_by_frequency(frequency)
         if not employees:
             raise RunError(f"no employees with frequency {frequency.value} to run")
 

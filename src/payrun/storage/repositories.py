@@ -112,6 +112,21 @@ class SqliteEmployeeRepository:
         rows = self._connection.execute(_SELECT_ALL_SQL).fetchall()
         return [_employee_from_row(row) for row in rows]
 
+    def list_by_frequency(self, frequency: Frequency) -> list[Employee]:
+        rows = self._connection.execute(
+            "SELECT * FROM employees WHERE frequency = ? ORDER BY id", (frequency.value,)
+        ).fetchall()
+        return [_employee_from_row(row) for row in rows]
+
+    def list_active_on(self, day: dt.date) -> list[Employee]:
+        day_iso = day.isoformat()
+        rows = self._connection.execute(
+            "SELECT * FROM employees WHERE hire_date <= ? "
+            "AND (termination_date IS NULL OR termination_date >= ?) ORDER BY id",
+            (day_iso, day_iso),
+        ).fetchall()
+        return [_employee_from_row(row) for row in rows]
+
 
 class SqliteTimesheetRepository:
     def __init__(self, connection: sqlite3.Connection) -> None:
