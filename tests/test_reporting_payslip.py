@@ -70,3 +70,25 @@ def test_employer_contributions_section_present_even_when_empty():
     lines = payslip_lines(_payslip())
     index = lines.index("Employer Contributions:")
     assert lines[index + 1] == "Gross: 2000.00 USD"
+
+
+def test_total_earnings_line_equals_gross():
+    assert "  Total Earnings: 2000.00 USD" in payslip_lines(_payslip())
+
+
+def test_total_deductions_line_sums_all_deduction_lines():
+    assert "  Total Deductions: 200.00 USD" in payslip_lines(_payslip())
+
+
+def test_total_employer_contributions_line_present_when_nonempty():
+    employer_contributions = (
+        DeductionLine(DeductionCode("PENSION"), Money(Decimal("100.00"), "USD")),
+        DeductionLine(DeductionCode("INSURANCE"), Money(Decimal("35.00"), "USD")),
+    )
+    lines = payslip_lines(_payslip(employer_contributions))
+    assert "  Total Employer Contributions: 135.00 USD" in lines
+
+
+def test_no_total_employer_contributions_line_when_empty():
+    lines = payslip_lines(_payslip())
+    assert not any(line.startswith("  Total Employer Contributions") for line in lines)
