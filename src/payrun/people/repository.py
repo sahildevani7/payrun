@@ -20,6 +20,8 @@ from payrun.people.employee import Employee
 class EmployeeRepository(Protocol):
     def add(self, employee: Employee) -> None: ...
 
+    def update(self, employee: Employee) -> None: ...
+
     def get(self, employee_id: EmployeeId) -> Employee: ...
 
     def list_all(self) -> list[Employee]: ...
@@ -36,6 +38,11 @@ class InMemoryEmployeeRepository:
     def add(self, employee: Employee) -> None:
         if employee.id in self._employees:
             raise ValidationError(f"employee {employee.id} already exists")
+        self._employees[employee.id] = employee
+
+    def update(self, employee: Employee) -> None:
+        if employee.id not in self._employees:
+            raise NotFoundError(f"no employee with id {employee.id}")
         self._employees[employee.id] = employee
 
     def get(self, employee_id: EmployeeId) -> Employee:

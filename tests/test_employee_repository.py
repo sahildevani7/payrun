@@ -118,3 +118,25 @@ def test_list_active_on_excludes_terminated_employees():
     )
     assert repo.list_active_on(dt.date(2026, 1, 15)) != []
     assert repo.list_active_on(dt.date(2026, 1, 16)) == []
+
+
+def test_update_replaces_the_stored_employee():
+    repo = InMemoryEmployeeRepository()
+    repo.add(_employee("E0001", frequency=Frequency.WEEKLY))
+    updated = _employee("E0001", frequency=Frequency.MONTHLY)
+    repo.update(updated)
+    assert repo.get(EmployeeId("E0001")).frequency == Frequency.MONTHLY
+
+
+def test_update_missing_employee_raises_not_found():
+    repo = InMemoryEmployeeRepository()
+    with pytest.raises(NotFoundError):
+        repo.update(_employee("E9999"))
+
+
+def test_update_does_not_affect_other_employees():
+    repo = InMemoryEmployeeRepository()
+    repo.add(_employee("E0001", frequency=Frequency.WEEKLY))
+    repo.add(_employee("E0002", frequency=Frequency.WEEKLY))
+    repo.update(_employee("E0001", frequency=Frequency.MONTHLY))
+    assert repo.get(EmployeeId("E0002")).frequency == Frequency.WEEKLY
