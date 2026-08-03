@@ -172,3 +172,34 @@ def test_payslip_invalid_period_format_fails(config_path, capsys):
     exit_code = _run(config_path, "payslip", "--employee", "E0001", "--period", "not-a-date")
     assert exit_code == 1
     assert "error:" in capsys.readouterr().err
+
+
+def test_employees_list_shows_added_employees(config_path, capsys):
+    _add_salaried_employee(config_path, "E0001")
+    _add_salaried_employee(config_path, "E0002")
+    assert _run(config_path, "employees", "list") == 0
+    output = capsys.readouterr().out
+    assert "E0001" in output
+    assert "E0002" in output
+    assert "SALARIED" in output
+
+
+def test_employees_list_on_empty_repository_still_succeeds(config_path, capsys):
+    assert _run(config_path, "employees", "list") == 0
+    output = capsys.readouterr().out
+    assert "ID" in output
+
+
+def test_employees_show_displays_employee_details(config_path, capsys):
+    _add_salaried_employee(config_path, "E0001")
+    assert _run(config_path, "employees", "show", "--id", "E0001") == 0
+    output = capsys.readouterr().out
+    assert "Employee: E0001" in output
+    assert "Name: Jordan Lee" in output
+    assert "Pay type: SALARIED" in output
+
+
+def test_employees_show_missing_employee_fails(config_path, capsys):
+    exit_code = _run(config_path, "employees", "show", "--id", "E9999")
+    assert exit_code == 1
+    assert "error:" in capsys.readouterr().err

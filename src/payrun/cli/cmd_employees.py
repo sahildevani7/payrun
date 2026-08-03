@@ -1,4 +1,4 @@
-"""`payrun employees add`: register a new employee."""
+"""`payrun employees`: add, list, and show employees."""
 
 from __future__ import annotations
 
@@ -7,11 +7,12 @@ import datetime as dt
 from decimal import Decimal, InvalidOperation
 
 from payrun.calendarx.frequency import Frequency
+from payrun.cli.formatting import format_table
 from payrun.config import Config
 from payrun.errors import ValidationError
 from payrun.ids import EmployeeId
 from payrun.money import Money
-from payrun.people.compensation import HourlyCompensation, SalariedCompensation
+from payrun.people.compensation import Compensation, HourlyCompensation, SalariedCompensation
 from payrun.people.employee import Employee
 from payrun.people.employment import Employment, EmploymentStatus
 from payrun.storage.engine import connect_and_migrate
@@ -32,17 +33,30 @@ def add_subparser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser
     add_parser.add_argument(
         "--amount", required=True, help="annual salary if SALARIED, hourly rate if HOURLY"
     )
-    add_parser.set_defaults(handler=run)
+    add_parser.set_defaults(handler=run_add)
+
+    list_parser = employees_subparsers.add_parser("list", help="list every employee")
+    list_parser.set_defaults(handler=run_list)
+
+    show_parser = employees_subparsers.add_parser("show", help="show one employee's details")
+    show_parser.add_argument("--id", required=True)
+    show_parser.set_defaults(handler=run_show)
 
 
-def run(args: argparse.Namespace, config: Config) -> int:
+def _compensation_summary(compensation: Compensation) -> tuple[str, str]:
+    if isinstance(compensation, SalariedCompensation):
+        return "SALARIED", str(compensation.annual_amount)
+    return "HOURLY", str(compensation.hourly_rate)
+
+
+def run_add(args: argparse.Namespace, config: Config) -> int:
     try:
         hire_date = dt.date.fromisoformat(args.hire_date)
         amount = Money(Decimal(args.amount), config.currency)
     except (ValueError, InvalidOperation) as exc:
         raise ValidationError(f"invalid employee argument: {exc}") from exc
 
-    compensation = (
+    compensation: Compensation = (
         SalariedCompensation(amount) if args.pay_type == "SALARIED" else HourlyCompensation(amount)
     )
     employee = Employee(
@@ -62,4 +76,49 @@ def run(args: argparse.Namespace, config: Config) -> int:
         connection.close()
 
     print(f"added employee {employee.id}")
+    return 0
+
+
+def run_list(args: argparse.Namespace, config: Config) -> int:
+    connection = connect_and_migrate(config.database_path)
+    try:
+        employees = SqliteEmployeeRepository(connection).list_all()
+    finally:
+        connection.close()
+
+    rows = []
+    for employee in employees:
+        pay_type, amount = _compensation_summary(employee.compensation)
+        rows.append(
+            [
+                str(employee.id),
+                employee.full_name,
+                employee.frequency.value,
+                employee.employment.status.value,
+                pay_type,
+                amount,
+            ]
+        )
+    headers = ["ID", "Name", "Frequency", "Status", "Pay Type", "Amount"]
+    print(format_table(headers, rows))
+    return 0
+
+
+def run_show(args: argparse.Namespace, config: Config) -> int:
+    connection = connect_and_migrate(config.database_path)
+    try:
+        employee = SqliteEmployeeRepository(connection).get(EmployeeId(args.id))
+    finally:
+        connection.close()
+
+    pay_type, amount = _compensation_summary(employee.compensation)
+    print(f"Employee: {employee.id}")
+    print(f"Name: {employee.full_name}")
+    print(f"Frequency: {employee.frequency.value}")
+    print(f"Hire date: {employee.employment.hire_date.isoformat()}")
+    print(f"Status: {employee.employment.status.value}")
+    if employee.employment.termination_date is not None:
+        print(f"Termination date: {employee.employment.termination_date.isoformat()}")
+    print(f"Pay type: {pay_type}")
+    print(f"Amount: {amount}")
     return 0
