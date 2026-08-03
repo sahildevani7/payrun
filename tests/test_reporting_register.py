@@ -53,7 +53,7 @@ def test_empty_run_has_only_the_header():
     assert register_lines(result) == ["Pay Run Register: 2026-03-01..2026-03-15"]
 
 
-def test_register_has_one_line_per_payslip_plus_header():
+def test_register_has_one_line_per_payslip_plus_header_and_total():
     result = PayRunResult(
         period=_period(),
         payslips=(
@@ -62,4 +62,16 @@ def test_register_has_one_line_per_payslip_plus_header():
             _payslip("E0003", "1500.00", "1350.00"),
         ),
     )
-    assert len(register_lines(result)) == 4
+    assert len(register_lines(result)) == 5
+
+
+def test_register_total_sums_gross_and_net_across_employees():
+    result = PayRunResult(
+        period=_period(),
+        payslips=(
+            _payslip("E0001", "2000.00", "1800.00"),
+            _payslip("E0002", "3000.00", "2600.00"),
+        ),
+    )
+    lines = register_lines(result)
+    assert lines[-1] == "TOTAL: gross=5000.00 USD net=4400.00 USD"
