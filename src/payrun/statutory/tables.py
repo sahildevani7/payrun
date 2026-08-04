@@ -21,7 +21,7 @@ from typing import Any
 from payrun.errors import ParameterNotFoundError
 from payrun.money import Money
 from payrun.rate import Rate
-from payrun.tax.brackets import TaxBracket
+from payrun.tax.brackets import TaxBracket, validate_ascending
 
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
@@ -74,6 +74,7 @@ def _parse(plan_year: int, raw: dict[str, Any]) -> StatutoryParameters:
         )
         for bracket in tax_raw["brackets"]
     )
+    validate_ascending(brackets)
     return StatutoryParameters(
         plan_year=plan_year,
         currency=currency,
