@@ -59,6 +59,10 @@ def test_repr_shows_the_value():
     assert repr(Hours(Decimal("8.00"))) == "Hours(Decimal('8.00'))"
 
 
+def test_str_shows_the_bare_decimal():
+    assert str(Hours(Decimal("8.00"))) == "8.00"
+
+
 def test_le_and_ge_boundaries():
     assert Hours(Decimal("8.00")) <= Hours(Decimal("8.00"))
     assert Hours(Decimal("8.00")) >= Hours(Decimal("8.00"))

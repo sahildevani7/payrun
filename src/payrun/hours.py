@@ -68,3 +68,6 @@ class Hours:
 
     def __repr__(self) -> str:
         return f"Hours({self._value!r})"
+
+    def __str__(self) -> str:
+        return str(self._value)
