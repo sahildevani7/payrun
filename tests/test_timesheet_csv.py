@@ -6,7 +6,7 @@ import pytest
 from payrun.errors import ImporterError
 from payrun.hours import Hours
 from payrun.ids import EmployeeId
-from payrun.importers.base import TimesheetEntry, aggregate_hours
+from payrun.importers.base import TimesheetEntry, aggregate_hours, parse_file, total_hours
 from payrun.importers.timesheet_csv import TimesheetCsvImporter
 
 
@@ -98,3 +98,29 @@ def test_parses_rows_for_multiple_employees():
     )
     entries = TimesheetCsvImporter().parse(content)
     assert {e.employee_id for e in entries} == {EmployeeId("E0001"), EmployeeId("E0002")}
+
+
+def test_total_hours_sums_across_every_employee():
+    entries = [
+        TimesheetEntry(EmployeeId("E0001"), dt.date(2026, 3, 2), Hours(Decimal("8.00"))),
+        TimesheetEntry(EmployeeId("E0002"), dt.date(2026, 3, 2), Hours(Decimal("6.00"))),
+    ]
+    assert total_hours(entries) == Hours(Decimal("14.00"))
+
+
+def test_total_hours_of_empty_entries_is_zero():
+    assert total_hours([]) == Hours.zero()
+
+
+def test_parse_file_reads_and_parses_a_csv_file(tmp_path):
+    path = tmp_path / "timesheet.csv"
+    path.write_text("employee_id,work_date,hours\nE0001,2026-03-02,8.00\n")
+    entries = parse_file(TimesheetCsvImporter(), path)
+    assert entries == [
+        TimesheetEntry(EmployeeId("E0001"), dt.date(2026, 3, 2), Hours(Decimal("8.00")))
+    ]
+
+
+def test_parse_file_missing_file_raises_importer_error(tmp_path):
+    with pytest.raises(ImporterError):
+        parse_file(TimesheetCsvImporter(), tmp_path / "missing.csv")
