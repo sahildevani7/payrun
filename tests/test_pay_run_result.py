@@ -1,4 +1,5 @@
 import datetime as dt
+from dataclasses import FrozenInstanceError
 from decimal import Decimal
 
 import pytest
@@ -8,7 +9,7 @@ from payrun.deductions.code import DeductionCode
 from payrun.deductions.line import DeductionLine
 from payrun.earnings.code import EarningCode
 from payrun.earnings.line import EarningLine
-from payrun.errors import NotFoundError, ValidationError
+from payrun.errors import CurrencyMismatchError, NotFoundError, ValidationError
 from payrun.ids import EmployeeId
 from payrun.money import Money
 from payrun.run.result import PayRunResult, PaySlip
@@ -106,3 +107,31 @@ def test_totals_on_an_empty_run_raise_validation_error():
     result = PayRunResult(period=_period(), payslips=())
     with pytest.raises(ValidationError):
         result.totals()
+
+
+def test_totals_for_a_single_payslip_match_that_payslip():
+    result = PayRunResult(period=_period(), payslips=(_payslip("E0001", "2000.00", "1800.00"),))
+    totals = result.totals()
+    assert totals.gross == result.payslips[0].gross
+    assert totals.net == result.payslips[0].net
+
+
+def test_totals_reject_mismatched_currencies():
+    foreign = PaySlip(
+        employee_id=EmployeeId("E0002"),
+        period=_period(),
+        earnings=(),
+        deductions=(),
+        employer_contributions=(),
+        gross=Money(Decimal("3000.00"), "CAD"),
+        net=Money(Decimal("2600.00"), "CAD"),
+    )
+    result = PayRunResult(period=_period(), payslips=(_payslip("E0001"), foreign))
+    with pytest.raises(CurrencyMismatchError):
+        result.totals()
+
+
+def test_run_totals_is_immutable():
+    totals = PayRunResult(period=_period(), payslips=(_payslip("E0001"),)).totals()
+    with pytest.raises(FrozenInstanceError):
+        totals.gross = Money.zero("USD")
