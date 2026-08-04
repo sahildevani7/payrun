@@ -42,6 +42,6 @@ def test_connect_and_migrate_is_idempotent(tmp_path):
     connection = connect_and_migrate(path)
     try:
         row = connection.execute("SELECT COUNT(*) AS n FROM schema_migrations").fetchone()
-        assert row["n"] == 2
+        assert row["n"] == 3
     finally:
         connection.close()

@@ -18,6 +18,7 @@ def test_run_applies_all_migrations_and_creates_employees_table(connection):
     applied = MigrationRunner().run(connection)
     assert "0001_create_employees" in applied
     assert "0002_create_run_tables" in applied
+    assert "0003_add_indices" in applied
     tables = {
         row["name"]
         for row in connection.execute(
@@ -42,7 +43,11 @@ def test_run_is_idempotent(connection):
 def test_applied_lists_migration_names_in_order(connection):
     runner = MigrationRunner()
     runner.run(connection)
-    assert runner.applied(connection) == ["0001_create_employees", "0002_create_run_tables"]
+    assert runner.applied(connection) == [
+        "0001_create_employees",
+        "0002_create_run_tables",
+        "0003_add_indices",
+    ]
 
 
 def test_duplicate_migration_names_are_rejected():
@@ -77,4 +82,5 @@ def test_default_migrations_list_matches_module_migrations():
     assert [m.name for m in MIGRATIONS] == [
         "0001_create_employees",
         "0002_create_run_tables",
+        "0003_add_indices",
     ]
