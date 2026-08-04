@@ -33,6 +33,13 @@ INSERT INTO employees (
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
+_UPDATE_SQL = """
+UPDATE employees SET
+    first_name = ?, last_name = ?, frequency = ?, hire_date = ?, status = ?,
+    termination_date = ?, compensation_type = ?, compensation_amount = ?, currency = ?
+WHERE id = ?
+"""
+
 _SELECT_ALL_SQL = "SELECT * FROM employees ORDER BY id"
 _SELECT_ONE_SQL = "SELECT * FROM employees WHERE id = ?"
 
@@ -101,6 +108,13 @@ class SqliteEmployeeRepository:
             self._connection.execute(_INSERT_SQL, _row_from_employee(employee))
         except sqlite3.IntegrityError as exc:
             raise ValidationError(f"employee {employee.id} already exists") from exc
+
+    def update(self, employee: Employee) -> None:
+        row = _row_from_employee(employee)
+        # _row_from_employee places id first; UPDATE needs it last, for the WHERE clause.
+        cursor = self._connection.execute(_UPDATE_SQL, (*row[1:], row[0]))
+        if cursor.rowcount == 0:
+            raise NotFoundError(f"no employee with id {employee.id}")
 
     def get(self, employee_id: EmployeeId) -> Employee:
         row = self._connection.execute(_SELECT_ONE_SQL, (str(employee_id),)).fetchone()

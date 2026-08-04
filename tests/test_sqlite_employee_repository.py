@@ -159,3 +159,43 @@ def test_list_active_on_excludes_terminated_employees(repository):
     )
     assert len(repository.list_active_on(dt.date(2026, 1, 15))) == 1
     assert repository.list_active_on(dt.date(2026, 1, 16)) == []
+
+
+def test_update_replaces_the_stored_employee(repository):
+    repository.add(_salaried_employee("E0007"))
+    terminated = Employee(
+        id=EmployeeId("E0007"),
+        first_name="Jordan",
+        last_name="Lee",
+        frequency=Frequency.BIWEEKLY,
+        employment=Employment(
+            hire_date=dt.date(2020, 1, 1),
+            status=EmploymentStatus.TERMINATED,
+            termination_date=dt.date(2026, 3, 15),
+        ),
+        compensation=SalariedCompensation(Money(Decimal("78000.00"), "USD")),
+    )
+    repository.update(terminated)
+    round_tripped = repository.get(EmployeeId("E0007"))
+    assert round_tripped.employment.status.value == "TERMINATED"
+    assert round_tripped.employment.termination_date == dt.date(2026, 3, 15)
+
+
+def test_update_missing_employee_raises_not_found(repository):
+    with pytest.raises(NotFoundError):
+        repository.update(_salaried_employee("E9999"))
+
+
+def test_update_does_not_affect_other_employees(repository):
+    repository.add(_salaried_employee("E0001"))
+    repository.add(_salaried_employee("E0002"))
+    updated = Employee(
+        id=EmployeeId("E0001"),
+        first_name="Changed",
+        last_name="Name",
+        frequency=Frequency.WEEKLY,
+        employment=Employment(hire_date=dt.date(2020, 1, 1), status=EmploymentStatus.ACTIVE),
+        compensation=SalariedCompensation(Money(Decimal("90000.00"), "USD")),
+    )
+    repository.update(updated)
+    assert repository.get(EmployeeId("E0002")).first_name == "Jordan"
