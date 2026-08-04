@@ -12,7 +12,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from payrun.calendarx.frequency import Frequency
 from payrun.errors import ConfigurationError
+from payrun.money import CURRENCY_EXPONENTS
 
 _REQUIRED_KEYS = ("database_path", "currency", "plan_year", "frequency")
 
@@ -30,7 +32,7 @@ class Config:
         if missing:
             raise ConfigurationError(f"missing config keys: {', '.join(sorted(missing))}")
         try:
-            return cls(
+            config = cls(
                 database_path=str(data["database_path"]),
                 currency=str(data["currency"]),
                 plan_year=int(data["plan_year"]),
@@ -38,6 +40,12 @@ class Config:
             )
         except (TypeError, ValueError) as exc:
             raise ConfigurationError(f"malformed config value: {exc}") from exc
+
+        if config.currency not in CURRENCY_EXPONENTS:
+            raise ConfigurationError(f"unknown currency {config.currency!r}")
+        if config.frequency not in {frequency.value for frequency in Frequency}:
+            raise ConfigurationError(f"unknown frequency {config.frequency!r}")
+        return config
 
 
 def load_config(path: Path) -> Config:

@@ -60,6 +60,26 @@ def test_load_config_rejects_non_object_json(tmp_path):
         load_config(path)
 
 
+def test_from_mapping_rejects_unknown_currency():
+    with pytest.raises(ConfigurationError):
+        Config.from_mapping(_mapping(currency="ZZZ"))
+
+
+def test_from_mapping_rejects_unknown_frequency():
+    with pytest.raises(ConfigurationError):
+        Config.from_mapping(_mapping(frequency="YEARLY"))
+
+
+def test_from_mapping_accepts_every_known_currency():
+    for currency in ("USD", "CAD", "GBP", "EUR", "JPY"):
+        assert Config.from_mapping(_mapping(currency=currency)).currency == currency
+
+
+def test_from_mapping_accepts_every_known_frequency():
+    for frequency in ("WEEKLY", "BIWEEKLY", "SEMIMONTHLY", "MONTHLY"):
+        assert Config.from_mapping(_mapping(frequency=frequency)).frequency == frequency
+
+
 def test_config_is_frozen():
     config = Config(
         database_path="payrun.db", currency="USD", plan_year=2026, frequency="BIWEEKLY"
