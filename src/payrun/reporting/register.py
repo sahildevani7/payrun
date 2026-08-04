@@ -14,4 +14,11 @@ def register_lines(result: PayRunResult) -> list[str]:
         total_gross = sum_amounts(payslip.gross for payslip in result.payslips)
         total_net = sum_amounts(payslip.net for payslip in result.payslips)
         lines.append(f"TOTAL: gross={total_gross} net={total_net}")
+
+    employer_lines = [
+        line for payslip in result.payslips for line in payslip.employer_contributions
+    ]
+    if employer_lines:
+        total_employer = sum_amounts(line.amount for line in employer_lines)
+        lines.append(f"TOTAL EMPLOYER CONTRIBUTIONS: {total_employer}")
     return lines

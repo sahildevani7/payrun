@@ -2,6 +2,8 @@ import datetime as dt
 from decimal import Decimal
 
 from payrun.calendarx.period import PayPeriod
+from payrun.deductions.code import DeductionCode
+from payrun.deductions.line import DeductionLine
 from payrun.ids import EmployeeId
 from payrun.money import Money
 from payrun.reporting.register import register_lines
@@ -17,13 +19,18 @@ def _period() -> PayPeriod:
     )
 
 
-def _payslip(employee_id: str, gross: str, net: str) -> PaySlip:
+def _payslip(
+    employee_id: str,
+    gross: str,
+    net: str,
+    employer_contributions: tuple[DeductionLine, ...] = (),
+) -> PaySlip:
     return PaySlip(
         employee_id=EmployeeId(employee_id),
         period=_period(),
         earnings=(),
         deductions=(),
-        employer_contributions=(),
+        employer_contributions=employer_contributions,
         gross=Money(Decimal(gross), "USD"),
         net=Money(Decimal(net), "USD"),
     )
@@ -75,3 +82,36 @@ def test_register_total_sums_gross_and_net_across_employees():
     )
     lines = register_lines(result)
     assert lines[-1] == "TOTAL: gross=5000.00 USD net=4400.00 USD"
+
+
+def test_no_employer_contribution_total_when_none_recorded():
+    result = PayRunResult(period=_period(), payslips=(_payslip("E0001", "2000.00", "1800.00"),))
+    lines = register_lines(result)
+    assert not any(line.startswith("TOTAL EMPLOYER") for line in lines)
+
+
+def test_employer_contribution_total_sums_across_employees():
+    result = PayRunResult(
+        period=_period(),
+        payslips=(
+            _payslip(
+                "E0001",
+                "2000.00",
+                "1800.00",
+                employer_contributions=(
+                    DeductionLine(DeductionCode("PENSION"), Money(Decimal("100.00"), "USD")),
+                ),
+            ),
+            _payslip(
+                "E0002",
+                "3000.00",
+                "2600.00",
+                employer_contributions=(
+                    DeductionLine(DeductionCode("PENSION"), Money(Decimal("150.00"), "USD")),
+                    DeductionLine(DeductionCode("INSURANCE"), Money(Decimal("50.00"), "USD")),
+                ),
+            ),
+        ),
+    )
+    lines = register_lines(result)
+    assert lines[-1] == "TOTAL EMPLOYER CONTRIBUTIONS: 300.00 USD"
