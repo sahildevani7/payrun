@@ -15,12 +15,12 @@ def payslip_lines(payslip: PaySlip) -> list[str]:
         "Earnings:",
     ]
     for earning in payslip.earnings:
-        lines.append(f"  {earning.code}: {earning.amount}")
+        lines.append(f"  {earning}")
     lines.append(f"  Total Earnings: {payslip.gross}")
 
     lines.append("Deductions:")
     for deduction in payslip.deductions:
-        lines.append(f"  {deduction.code}: {deduction.amount}")
+        lines.append(f"  {deduction}")
     deduction_total = (
         sum_amounts(line.amount for line in payslip.deductions)
         if payslip.deductions
@@ -30,7 +30,7 @@ def payslip_lines(payslip: PaySlip) -> list[str]:
 
     lines.append("Employer Contributions:")
     for contribution in payslip.employer_contributions:
-        lines.append(f"  {contribution.code}: {contribution.amount}")
+        lines.append(f"  {contribution}")
     if payslip.employer_contributions:
         employer_total = sum_amounts(line.amount for line in payslip.employer_contributions)
         lines.append(f"  Total Employer Contributions: {employer_total}")

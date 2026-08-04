@@ -17,3 +17,6 @@ class DeductionLine:
     def __post_init__(self) -> None:
         if self.amount.amount < 0:
             raise ValidationError("DeductionLine amount must not be negative")
+
+    def __str__(self) -> str:
+        return f"{self.code}: {self.amount}"

@@ -22,3 +22,8 @@ def test_rejects_negative_amount():
 def test_zero_amount_is_allowed():
     line = DeductionLine(code=DeductionCode("HEALTH"), amount=Money.zero("USD"))
     assert line.amount == Money.zero("USD")
+
+
+def test_str_renders_code_and_amount():
+    line = DeductionLine(code=DeductionCode("HEALTH"), amount=Money(Decimal("50.00"), "USD"))
+    assert str(line) == "HEALTH: 50.00 USD"

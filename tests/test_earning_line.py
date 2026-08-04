@@ -33,3 +33,12 @@ def test_rejects_negative_amount():
 def test_zero_amount_is_allowed():
     line = EarningLine(code=EarningCode("OVERTIME"), amount=Money.zero("USD"))
     assert line.amount == Money.zero("USD")
+
+
+def test_str_renders_code_and_amount():
+    line = EarningLine(
+        code=EarningCode("REGULAR"),
+        amount=Money(Decimal("520.00"), "USD"),
+        hours=Hours(Decimal("16")),
+    )
+    assert str(line) == "REGULAR: 520.00 USD"
