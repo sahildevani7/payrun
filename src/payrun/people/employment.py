@@ -35,3 +35,14 @@ class Employment:
         if self.termination_date is not None and day > self.termination_date:
             return False
         return True
+
+    def days_until_termination(self, day: dt.date) -> int:
+        """Days from `day` through the termination date; 0 once past it."""
+        if self.status is not EmploymentStatus.TERMINATED:
+            raise ValidationError("days_until_termination requires a terminated employment")
+        termination_date = self.termination_date
+        if termination_date is None:
+            raise ValidationError("days_until_termination requires a terminated employment")
+        if day > termination_date:
+            return 0
+        return (termination_date - day).days + 1

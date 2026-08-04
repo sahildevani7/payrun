@@ -59,6 +59,42 @@ def test_termination_on_the_same_day_as_hire_is_allowed():
     assert employment.is_active_on(dt.date(2026, 3, 15))
 
 
+def test_days_until_termination_counts_inclusive_days():
+    employment = Employment(
+        hire_date=dt.date(2020, 1, 1),
+        status=EmploymentStatus.TERMINATED,
+        termination_date=dt.date(2026, 3, 15),
+    )
+    assert employment.days_until_termination(dt.date(2026, 3, 15)) == 1
+    assert employment.days_until_termination(dt.date(2026, 3, 1)) == 15
+    assert employment.days_until_termination(dt.date(2026, 1, 1)) == 74
+
+
+def test_days_until_termination_is_zero_after_the_termination_date():
+    employment = Employment(
+        hire_date=dt.date(2020, 1, 1),
+        status=EmploymentStatus.TERMINATED,
+        termination_date=dt.date(2026, 3, 15),
+    )
+    assert employment.days_until_termination(dt.date(2026, 3, 16)) == 0
+    assert employment.days_until_termination(dt.date(2027, 1, 1)) == 0
+
+
+def test_days_until_termination_on_the_termination_day_is_one():
+    employment = Employment(
+        hire_date=dt.date(2020, 1, 1),
+        status=EmploymentStatus.TERMINATED,
+        termination_date=dt.date(2026, 3, 15),
+    )
+    assert employment.days_until_termination(employment.termination_date) == 1
+
+
+def test_days_until_termination_rejects_active_employment():
+    employment = Employment(hire_date=dt.date(2020, 1, 1), status=EmploymentStatus.ACTIVE)
+    with pytest.raises(ValidationError):
+        employment.days_until_termination(dt.date(2026, 3, 1))
+
+
 def test_employment_equality():
     a = Employment(hire_date=dt.date(2020, 1, 1), status=EmploymentStatus.ACTIVE)
     b = Employment(hire_date=dt.date(2020, 1, 1), status=EmploymentStatus.ACTIVE)
