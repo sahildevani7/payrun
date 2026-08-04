@@ -203,3 +203,33 @@ def test_employees_show_missing_employee_fails(config_path, capsys):
     exit_code = _run(config_path, "employees", "show", "--id", "E9999")
     assert exit_code == 1
     assert "error:" in capsys.readouterr().err
+
+
+def test_employees_terminate_updates_status(config_path, capsys):
+    _add_salaried_employee(config_path, "E0001")
+    exit_code = _run(
+        config_path, "employees", "terminate", "--id", "E0001", "--termination-date", "2026-03-15"
+    )
+    assert exit_code == 0
+
+    _run(config_path, "employees", "show", "--id", "E0001")
+    output = capsys.readouterr().out
+    assert "Status: TERMINATED" in output
+    assert "Termination date: 2026-03-15" in output
+
+
+def test_employees_terminate_missing_employee_fails(config_path, capsys):
+    exit_code = _run(
+        config_path, "employees", "terminate", "--id", "E9999", "--termination-date", "2026-03-15"
+    )
+    assert exit_code == 1
+    assert "error:" in capsys.readouterr().err
+
+
+def test_employees_terminate_invalid_date_fails(config_path, capsys):
+    _add_salaried_employee(config_path, "E0001")
+    exit_code = _run(
+        config_path, "employees", "terminate", "--id", "E0001", "--termination-date", "not-a-date"
+    )
+    assert exit_code == 1
+    assert "error:" in capsys.readouterr().err

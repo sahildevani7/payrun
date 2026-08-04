@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import datetime as dt
 from decimal import Decimal, InvalidOperation
 
@@ -41,6 +42,11 @@ def add_subparser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser
     show_parser = employees_subparsers.add_parser("show", help="show one employee's details")
     show_parser.add_argument("--id", required=True)
     show_parser.set_defaults(handler=run_show)
+
+    terminate_parser = employees_subparsers.add_parser("terminate", help="terminate an employee")
+    terminate_parser.add_argument("--id", required=True)
+    terminate_parser.add_argument("--termination-date", required=True, help="ISO 8601 date")
+    terminate_parser.set_defaults(handler=run_terminate)
 
 
 def _compensation_summary(compensation: Compensation) -> tuple[str, str]:
@@ -121,4 +127,31 @@ def run_show(args: argparse.Namespace, config: Config) -> int:
         print(f"Termination date: {employee.employment.termination_date.isoformat()}")
     print(f"Pay type: {pay_type}")
     print(f"Amount: {amount}")
+    return 0
+
+
+def run_terminate(args: argparse.Namespace, config: Config) -> int:
+    try:
+        termination_date = dt.date.fromisoformat(args.termination_date)
+    except ValueError as exc:
+        raise ValidationError(f"invalid --termination-date: {exc}") from exc
+
+    connection = connect_and_migrate(config.database_path)
+    try:
+        repository = SqliteEmployeeRepository(connection)
+        employee = repository.get(EmployeeId(args.id))
+        terminated = dataclasses.replace(
+            employee,
+            employment=Employment(
+                hire_date=employee.employment.hire_date,
+                status=EmploymentStatus.TERMINATED,
+                termination_date=termination_date,
+            ),
+        )
+        repository.update(terminated)
+        connection.commit()
+    finally:
+        connection.close()
+
+    print(f"terminated employee {args.id} effective {termination_date.isoformat()}")
     return 0
