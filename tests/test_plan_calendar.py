@@ -42,6 +42,28 @@ def test_sequence_of_matches_the_periods_position():
     assert calendar.sequence_of(dt.date(2026, 3, 1)) == 3
 
 
+def test_period_by_sequence_round_trips_sequence_of():
+    calendar = PlanCalendar(2026, Frequency.MONTHLY)
+    for period in calendar.periods():
+        assert calendar.period_by_sequence(period.sequence) == period
+
+
+def test_period_by_sequence_raises_not_found_for_an_out_of_range_sequence():
+    calendar = PlanCalendar(2026, Frequency.MONTHLY)
+    with pytest.raises(NotFoundError):
+        calendar.period_by_sequence(0)
+    with pytest.raises(NotFoundError):
+        calendar.period_by_sequence(13)
+
+
+def test_period_by_sequence_is_bound_to_the_frequency_schedule():
+    monthly = PlanCalendar(2026, Frequency.MONTHLY)
+    weekly = PlanCalendar(2026, Frequency.WEEKLY)
+    assert monthly.period_by_sequence(1).start == dt.date(2026, 1, 1)
+    assert weekly.period_by_sequence(1).start == dt.date(2026, 1, 1)
+    assert weekly.period_by_sequence(14).start == dt.date(2026, 4, 2)
+
+
 def test_working_days_in_uses_the_calendars_holidays():
     holidays = HolidayCalendar([dt.date(2026, 3, 2)])
     calendar = PlanCalendar(2026, Frequency.MONTHLY, holidays=holidays)

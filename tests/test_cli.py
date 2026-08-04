@@ -233,3 +233,44 @@ def test_employees_terminate_invalid_date_fails(config_path, capsys):
     )
     assert exit_code == 1
     assert "error:" in capsys.readouterr().err
+
+
+def test_run_accepts_a_period_sequence_number(config_path, capsys):
+    _add_salaried_employee(config_path, "E0001")
+    assert _run(config_path, "run", "--period", "3") == 0
+    run_output = capsys.readouterr().out
+    assert "1 employees" in run_output
+
+
+def test_run_accepts_a_sequence_number_with_leading_zeros(config_path, capsys):
+    _add_salaried_employee(config_path, "E0001")
+    assert _run(config_path, "run", "--period", "003") == 0
+    assert "1 employees" in capsys.readouterr().out
+
+
+def test_run_rejects_a_sequence_number_out_of_range(config_path, capsys):
+    _add_salaried_employee(config_path, "E0001")
+    exit_code = _run(config_path, "run", "--period", "13")
+    assert exit_code == 1
+    assert "error:" in capsys.readouterr().err
+
+
+def test_payslip_and_register_resolve_the_same_sequence_number(config_path, tmp_path, capsys):
+    _add_salaried_employee(config_path, "E0001")
+    assert _run(config_path, "run", "--period", "3") == 0
+    capsys.readouterr()
+
+    assert _run(config_path, "payslip", "--employee", "E0001", "--period", "3") == 0
+    payslip_output = capsys.readouterr().out
+    assert "Employee: E0001" in payslip_output
+
+    assert _run(config_path, "register", "--period", "3") == 0
+    register_output = capsys.readouterr().out
+    lines = register_output.splitlines()
+    assert lines[0] == "Pay Run Register: 2026-03-01..2026-03-31"
+
+
+def test_register_rejects_a_sequence_number_out_of_range(config_path, capsys):
+    exit_code = _run(config_path, "register", "--period", "13")
+    assert exit_code == 1
+    assert "error:" in capsys.readouterr().err

@@ -55,6 +55,15 @@ class PlanCalendar:
             f"no {self._frequency.value} period starts on {start} in plan year {self._plan_year}"
         )
 
+    def period_by_sequence(self, sequence: int) -> PayPeriod:
+        for period in self._periods:
+            if period.sequence == sequence:
+                return period
+        raise NotFoundError(
+            f"no {self._frequency.value} period with sequence {sequence} "
+            f"in plan year {self._plan_year}"
+        )
+
     def period_containing(self, day: dt.date) -> PayPeriod:
         for period in self._periods:
             if period.contains(day):

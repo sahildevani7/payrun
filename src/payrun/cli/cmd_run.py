@@ -9,10 +9,10 @@ the way a small business with one pay calendar actually runs payroll.
 from __future__ import annotations
 
 import argparse
-import datetime as dt
 
 from payrun.calendarx.frequency import Frequency
 from payrun.calendarx.plan_calendar import PlanCalendar
+from payrun.cli.period import parse_period_start
 from payrun.config import Config
 from payrun.errors import ConfigurationError, RunError
 from payrun.run.factory import build_engine
@@ -28,15 +28,16 @@ from payrun.storage.repositories import (
 
 def add_subparser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     parser = subparsers.add_parser("run", help="run payroll for a pay period")
-    parser.add_argument("--period", required=True, help="ISO 8601 start date of the pay period")
+    parser.add_argument(
+        "--period",
+        required=True,
+        help="ISO 8601 start date or sequence number of the pay period",
+    )
     parser.set_defaults(handler=run)
 
 
 def run(args: argparse.Namespace, config: Config) -> int:
-    try:
-        period_start = dt.date.fromisoformat(args.period)
-    except ValueError as exc:
-        raise RunError(f"invalid --period: {exc}") from exc
+    period_start = parse_period_start(args.period, config)
 
     try:
         frequency = Frequency(config.frequency)

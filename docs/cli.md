@@ -38,17 +38,19 @@ the hourly rate accordingly, in the config's currency.
 storage. Re-importing the same employee and date replaces that day's
 entry.
 
-**`payrun run --period <date>`** runs payroll for the period whose start
-date matches `<date>` on the configured frequency's schedule for
-`plan_year`. It reads timesheet hours already imported for that date
-range, computes every payslip, and persists both the payslips and the
-updated year-to-date totals.
+**`payrun run --period <date-or-sequence>`** runs payroll for the period
+whose start date matches `<date>` on the configured frequency's schedule
+for `plan_year` — or, in place of a date, the period's sequence number on
+that same schedule (`--period 3` is March in a monthly calendar). It reads
+timesheet hours already imported for that date range, computes every
+payslip, and persists both the payslips and the updated year-to-date
+totals.
 
-**`payrun payslip --employee <id> --period <date>`** renders one employee's
-payslip from a previously run period.
+**`payrun payslip --employee <id> --period <date-or-sequence>`** renders
+one employee's payslip from a previously run period.
 
-**`payrun register --period <date>`** renders the whole period's register:
-one row per employee, gross and net.
+**`payrun register --period <date-or-sequence>`** renders the whole
+period's register: one row per employee, gross and net.
 
 ## Exit codes
 
