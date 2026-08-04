@@ -126,6 +126,16 @@ class SqliteEmployeeRepository:
         rows = self._connection.execute(_SELECT_ALL_SQL).fetchall()
         return [_employee_from_row(row) for row in rows]
 
+    def count(self) -> int:
+        row = self._connection.execute("SELECT COUNT(*) FROM employees").fetchone()
+        return int(row[0])
+
+    def exists(self, employee_id: EmployeeId) -> bool:
+        row = self._connection.execute(
+            "SELECT 1 FROM employees WHERE id = ?", (str(employee_id),)
+        ).fetchone()
+        return row is not None
+
     def list_by_frequency(self, frequency: Frequency) -> list[Employee]:
         rows = self._connection.execute(
             "SELECT * FROM employees WHERE frequency = ? ORDER BY id", (frequency.value,)

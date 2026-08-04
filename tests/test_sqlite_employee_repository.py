@@ -199,3 +199,29 @@ def test_update_does_not_affect_other_employees(repository):
     )
     repository.update(updated)
     assert repository.get(EmployeeId("E0002")).first_name == "Jordan"
+
+
+def test_count_is_zero_on_an_empty_repository(repository):
+    assert repository.count() == 0
+
+
+def test_count_reflects_added_employees(repository):
+    repository.add(_salaried_employee("E0001"))
+    repository.add(_salaried_employee("E0002"))
+    assert repository.count() == 2
+
+
+def test_count_is_unchanged_by_update(repository):
+    repository.add(_salaried_employee("E0001"))
+    repository.update(_salaried_employee("E0001"))
+    assert repository.count() == 1
+
+
+def test_exists_is_false_for_a_missing_employee(repository):
+    assert not repository.exists(EmployeeId("E9999"))
+
+
+def test_exists_is_true_after_add(repository):
+    assert not repository.exists(EmployeeId("E0007"))
+    repository.add(_salaried_employee("E0007"))
+    assert repository.exists(EmployeeId("E0007"))
