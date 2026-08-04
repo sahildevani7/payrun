@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from payrun.reporting.formatting import sum_amounts
 from payrun.run.result import PayRunResult
 
 
@@ -11,14 +10,8 @@ def register_lines(result: PayRunResult) -> list[str]:
     for payslip in result.payslips:
         lines.append(f"{payslip.employee_id}: gross={payslip.gross} net={payslip.net}")
     if result.payslips:
-        total_gross = sum_amounts(payslip.gross for payslip in result.payslips)
-        total_net = sum_amounts(payslip.net for payslip in result.payslips)
-        lines.append(f"TOTAL: gross={total_gross} net={total_net}")
-
-    employer_lines = [
-        line for payslip in result.payslips for line in payslip.employer_contributions
-    ]
-    if employer_lines:
-        total_employer = sum_amounts(line.amount for line in employer_lines)
-        lines.append(f"TOTAL EMPLOYER CONTRIBUTIONS: {total_employer}")
+        totals = result.totals()
+        lines.append(f"TOTAL: gross={totals.gross} net={totals.net}")
+        if any(payslip.employer_contributions for payslip in result.payslips):
+            lines.append(f"TOTAL EMPLOYER CONTRIBUTIONS: {totals.employer_contributions}")
     return lines
