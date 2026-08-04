@@ -3,7 +3,7 @@ from decimal import Decimal
 import pytest
 
 from payrun.errors import ParameterNotFoundError
-from payrun.statutory.tables import load_parameters
+from payrun.statutory.tables import available_plan_years, load_parameters
 
 
 def test_loads_pension_parameters_for_known_plan_year():
@@ -61,3 +61,26 @@ def test_tax_brackets_are_ordered_ascending_by_threshold():
     params = load_parameters(2026)
     thresholds = [bracket.threshold.amount for bracket in params.tax.brackets]
     assert thresholds == sorted(thresholds)
+
+
+def test_available_plan_years_includes_every_shipped_year():
+    assert {2025, 2026, 2027}.issubset(set(available_plan_years()))
+
+
+def test_available_plan_years_is_sorted_ascending():
+    years = available_plan_years()
+    assert years == sorted(years)
+
+
+def test_adjacent_plan_years_load_independently():
+    year_2025 = load_parameters(2025)
+    year_2027 = load_parameters(2027)
+    assert year_2025.pension.exemption_annual.amount == Decimal("3300.00")
+    assert year_2027.pension.exemption_annual.amount == Decimal("3500.00")
+    assert year_2025 != year_2027
+
+
+def test_each_shipped_plan_year_loads_without_error():
+    for year in (2025, 2026, 2027):
+        params = load_parameters(year)
+        assert params.plan_year == year

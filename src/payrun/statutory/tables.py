@@ -106,3 +106,13 @@ def load_parameters(plan_year: int) -> StatutoryParameters:
     except OSError as exc:
         raise ParameterNotFoundError(plan_year, "parameters") from exc
     return _parse(plan_year, raw)
+
+
+def available_plan_years() -> list[int]:
+    """Every plan year with a parameter file, sorted ascending."""
+    years = []
+    for path in _DATA_DIR.glob("parameters_*.json"):
+        year_part = path.stem.removeprefix("parameters_")
+        if year_part.isdigit():
+            years.append(int(year_part))
+    return sorted(years)
