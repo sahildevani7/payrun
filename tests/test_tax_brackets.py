@@ -5,7 +5,7 @@ import pytest
 from payrun.errors import ValidationError
 from payrun.money import Money
 from payrun.rate import Rate
-from payrun.tax.brackets import TaxBracket, compute_tax
+from payrun.tax.brackets import TaxBracket, compute_tax, validate_ascending
 
 
 def _brackets() -> list[TaxBracket]:
@@ -63,3 +63,50 @@ def test_single_bracket_table_taxes_everything_at_one_rate():
 def test_income_just_below_a_threshold_stays_in_the_lower_bracket():
     tax = compute_tax(Money(Decimal("9999.99"), "USD"), _brackets())
     assert tax == Money(Decimal("1000.00"), "USD")
+
+
+def test_validate_ascending_accepts_a_well_formed_table():
+    validate_ascending(_brackets())
+
+
+def test_validate_ascending_rejects_empty_table():
+    with pytest.raises(ValidationError):
+        validate_ascending([])
+
+
+def test_validate_ascending_rejects_nonzero_first_threshold():
+    brackets = [TaxBracket(Money(Decimal("100.00"), "USD"), Rate(Decimal("0.10")))]
+    with pytest.raises(ValidationError):
+        validate_ascending(brackets)
+
+
+def test_validate_ascending_rejects_out_of_order_thresholds():
+    brackets = [
+        TaxBracket(Money(Decimal("0.00"), "USD"), Rate(Decimal("0.10"))),
+        TaxBracket(Money(Decimal("5000.00"), "USD"), Rate(Decimal("0.20"))),
+        TaxBracket(Money(Decimal("2000.00"), "USD"), Rate(Decimal("0.30"))),
+    ]
+    with pytest.raises(ValidationError):
+        validate_ascending(brackets)
+
+
+def test_validate_ascending_rejects_duplicate_thresholds():
+    brackets = [
+        TaxBracket(Money(Decimal("0.00"), "USD"), Rate(Decimal("0.10"))),
+        TaxBracket(Money(Decimal("0.00"), "USD"), Rate(Decimal("0.20"))),
+    ]
+    with pytest.raises(ValidationError):
+        validate_ascending(brackets)
+
+
+def test_validate_ascending_rejects_mixed_currencies():
+    brackets = [
+        TaxBracket(Money(Decimal("0.00"), "USD"), Rate(Decimal("0.10"))),
+        TaxBracket(Money(Decimal("5000.00"), "CAD"), Rate(Decimal("0.20"))),
+    ]
+    with pytest.raises(ValidationError):
+        validate_ascending(brackets)
+
+
+def test_validate_ascending_accepts_a_single_bracket():
+    validate_ascending([TaxBracket(Money(Decimal("0.00"), "USD"), Rate(Decimal("0.10")))])

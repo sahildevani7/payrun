@@ -25,6 +25,22 @@ class TaxBracket:
     rate: Rate
 
 
+def validate_ascending(brackets: Sequence[TaxBracket]) -> None:
+    """Raise if `brackets` is not sorted strictly ascending by threshold,
+    or does not start at zero. `compute_tax` assumes this ordering; nothing
+    downstream re-checks it once a bracket table has passed here.
+    """
+    if not brackets:
+        raise ValidationError("a bracket table requires at least one bracket")
+    if brackets[0].threshold.amount != 0:
+        raise ValidationError("the first bracket must start at a zero threshold")
+    for earlier, later in zip(brackets, brackets[1:], strict=False):
+        if earlier.threshold.currency != later.threshold.currency:
+            raise ValidationError("all brackets must share the same currency")
+        if later.threshold.amount <= earlier.threshold.amount:
+            raise ValidationError("bracket thresholds must be strictly ascending")
+
+
 def compute_tax(taxable_income: Money, brackets: Sequence[TaxBracket]) -> Money:
     if not brackets:
         raise ValidationError("compute_tax requires at least one bracket")
