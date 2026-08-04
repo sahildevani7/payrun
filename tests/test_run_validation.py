@@ -103,3 +103,33 @@ def test_employee_terminated_exactly_on_period_end_is_active():
         compensation=SalariedCompensation(Money(Decimal("78000.00"), "USD")),
     )
     validate_run([employee], _period(), {})
+
+
+def test_accepts_employee_currency_matching_the_run_currency():
+    employee = _salaried("E0001", dt.date(2020, 1, 1))
+    validate_run([employee], _period(), {}, currency="USD")
+
+
+def test_rejects_employee_currency_not_matching_the_run_currency():
+    employee = _salaried("E0001", dt.date(2020, 1, 1))
+    with pytest.raises(RunError):
+        validate_run([employee], _period(), {}, currency="CAD")
+
+
+def test_currency_check_is_skipped_when_not_provided():
+    employee = _salaried("E0001", dt.date(2020, 1, 1))
+    validate_run([employee], _period(), {})
+
+
+def test_rejects_hourly_employee_currency_not_matching_the_run_currency():
+    employee = Employee(
+        id=EmployeeId("E0002"),
+        first_name="Ada",
+        last_name="Okafor",
+        frequency=Frequency.SEMIMONTHLY,
+        employment=Employment(hire_date=dt.date(2020, 1, 1), status=EmploymentStatus.ACTIVE),
+        compensation=HourlyCompensation(Money(Decimal("32.50"), "USD")),
+    )
+    hours = {EmployeeId("E0002"): Hours(Decimal("80"))}
+    with pytest.raises(RunError):
+        validate_run([employee], _period(), hours, currency="CAD")

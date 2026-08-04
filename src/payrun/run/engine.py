@@ -80,7 +80,7 @@ class PayRunEngine:
         hours_by_employee: Mapping[EmployeeId, Hours],
         voluntary_codes_by_employee: Mapping[EmployeeId, Sequence[DeductionCode]] | None = None,
     ) -> PayRunResult:
-        validate_run(employees, period, hours_by_employee)
+        validate_run(employees, period, hours_by_employee, currency=self._currency)
         codes_by_employee = voluntary_codes_by_employee or {}
 
         payslips = [
